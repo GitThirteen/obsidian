@@ -1,22 +1,22 @@
 #pragma once
 
-#include <./avk/avk.hpp>
+#include <native/_include.h>
+#include <native/_define.h>
+#include <native/root.h>
+#include <native/input.h>
+#include <native/scene.h>
+#include <native/ui.h>
 
-#include <./native/_include.h>
-#include <./native/_define.h>
-
-class Obsidian : avk::root
+class Obsidian
 {
 public:
-    Obsidian()
-    {
-        
-    }
+    Obsidian(Obsidian const&) = delete;
+    void operator=(Obsidian const&) = delete;
 
-private:
-    vk::Instance instance;
-    vk::PhysicalDevice physical_device;
-    vk::Device device;
-    vk::DispatchLoaderDynamic dispatch_loader;
-    std::array<avk::queue, 2> queues;
+    Root root;
+    InputManager input;
+    SceneManager scene;
+    UIManager ui;
+
+    void draw();
 };
