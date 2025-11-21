@@ -1,4 +1,5 @@
 #define NOMINMAX
+#include <native/core/include.h>
 #include <avk/avk_log.hpp>
 #include "avk/avk.hpp"
 

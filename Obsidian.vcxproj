@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -19,12 +19,110 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\obsidian.cpp" />
+    <ClCompile Include="include\external\loguru\loguru.cpp" />
+    <ClCompile Include="src\core\obsidian.cpp" />
+    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\util\config.cpp" />
+    <ClCompile Include="src\core\root.cpp" />
+    <ClCompile Include="src\external\avk.cpp" />
+    <ClCompile Include="src\external\ryml.cpp" />
+    <ClCompile Include="src\managers\shaders.cpp" />
+    <ClCompile Include="src\managers\window.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\obsidian.h" />
-    <ClInclude Include="include\native\_define.h" />
-    <ClInclude Include="include\native\_include.h" />
+    <ClInclude Include="include\external\avk\acceleration_structure_size_requirements.hpp" />
+    <ClInclude Include="include\external\avk\attachment.hpp" />
+    <ClInclude Include="include\external\avk\avk.hpp" />
+    <ClInclude Include="include\external\avk\avk_error.hpp" />
+    <ClInclude Include="include\external\avk\avk_log.hpp" />
+    <ClInclude Include="include\external\avk\bindings.hpp" />
+    <ClInclude Include="include\external\avk\binding_data.hpp" />
+    <ClInclude Include="include\external\avk\border_handling_mode.hpp" />
+    <ClInclude Include="include\external\avk\bottom_level_acceleration_structure.hpp" />
+    <ClInclude Include="include\external\avk\buffer.hpp" />
+    <ClInclude Include="include\external\avk\buffer_meta.hpp" />
+    <ClInclude Include="include\external\avk\buffer_view.hpp" />
+    <ClInclude Include="include\external\avk\commands.hpp" />
+    <ClInclude Include="include\external\avk\command_buffer.hpp" />
+    <ClInclude Include="include\external\avk\command_pool.hpp" />
+    <ClInclude Include="include\external\avk\compute_pipeline.hpp" />
+    <ClInclude Include="include\external\avk\compute_pipeline_config.hpp" />
+    <ClInclude Include="include\external\avk\cpp_utils.hpp" />
+    <ClInclude Include="include\external\avk\descriptor_alloc_request.hpp" />
+    <ClInclude Include="include\external\avk\descriptor_cache.hpp" />
+    <ClInclude Include="include\external\avk\descriptor_pool.hpp" />
+    <ClInclude Include="include\external\avk\descriptor_set.hpp" />
+    <ClInclude Include="include\external\avk\descriptor_set_layout.hpp" />
+    <ClInclude Include="include\external\avk\fence.hpp" />
+    <ClInclude Include="include\external\avk\filter_mode.hpp" />
+    <ClInclude Include="include\external\avk\format_for.hpp" />
+    <ClInclude Include="include\external\avk\framebuffer.hpp" />
+    <ClInclude Include="include\external\avk\geometry_instance.hpp" />
+    <ClInclude Include="include\external\avk\graphics_pipeline.hpp" />
+    <ClInclude Include="include\external\avk\graphics_pipeline_config.hpp" />
+    <ClInclude Include="include\external\avk\image.hpp" />
+    <ClInclude Include="include\external\avk\image_color_channel_format.hpp" />
+    <ClInclude Include="include\external\avk\image_color_channel_order.hpp" />
+    <ClInclude Include="include\external\avk\image_sampler.hpp" />
+    <ClInclude Include="include\external\avk\image_usage.hpp" />
+    <ClInclude Include="include\external\avk\image_view.hpp" />
+    <ClInclude Include="include\external\avk\input_description.hpp" />
+    <ClInclude Include="include\external\avk\layout.hpp" />
+    <ClInclude Include="include\external\avk\mapping_access.hpp" />
+    <ClInclude Include="include\external\avk\memory_access.hpp" />
+    <ClInclude Include="include\external\avk\memory_usage.hpp" />
+    <ClInclude Include="include\external\avk\mem_handle.hpp" />
+    <ClInclude Include="include\external\avk\on_load.hpp" />
+    <ClInclude Include="include\external\avk\on_store.hpp" />
+    <ClInclude Include="include\external\avk\pipeline_stage.hpp" />
+    <ClInclude Include="include\external\avk\push_constants.hpp" />
+    <ClInclude Include="include\external\avk\query_pool.hpp" />
+    <ClInclude Include="include\external\avk\queue.hpp" />
+    <ClInclude Include="include\external\avk\ray_tracing_pipeline.hpp" />
+    <ClInclude Include="include\external\avk\ray_tracing_pipeline_config.hpp" />
+    <ClInclude Include="include\external\avk\renderpass.hpp" />
+    <ClInclude Include="include\external\avk\root_example_implementation.hpp" />
+    <ClInclude Include="include\external\avk\sampler.hpp" />
+    <ClInclude Include="include\external\avk\scoped_mapping.hpp" />
+    <ClInclude Include="include\external\avk\semaphore.hpp" />
+    <ClInclude Include="include\external\avk\set_of_descriptor_set_layouts.hpp" />
+    <ClInclude Include="include\external\avk\shader.hpp" />
+    <ClInclude Include="include\external\avk\shader_binding_table.hpp" />
+    <ClInclude Include="include\external\avk\shader_info.hpp" />
+    <ClInclude Include="include\external\avk\shader_type.hpp" />
+    <ClInclude Include="include\external\avk\stage_and_access.hpp" />
+    <ClInclude Include="include\external\avk\subpass_dependency.hpp" />
+    <ClInclude Include="include\external\avk\subpass_usages.hpp" />
+    <ClInclude Include="include\external\avk\subpass_usage_type.hpp" />
+    <ClInclude Include="include\external\avk\top_level_acceleration_structure.hpp" />
+    <ClInclude Include="include\external\avk\vertex_index_buffer_pair.hpp" />
+    <ClInclude Include="include\external\avk\vk_utils.hpp" />
+    <ClInclude Include="include\external\avk\vk_utils2.hpp" />
+    <ClInclude Include="include\external\avk\vma_handle.hpp" />
+    <ClInclude Include="include\external\avk\vulkan_helper_functions.hpp" />
+    <ClInclude Include="include\external\glfw\glfw3.h" />
+    <ClInclude Include="include\external\loguru\loguru.hpp" />
+    <ClInclude Include="include\external\vma\vk_mem_alloc.h" />
+    <ClInclude Include="include\external\yaml\ryml.hpp" />
+    <ClInclude Include="include\native\util\config.h" />
+    <ClInclude Include="include\native\core\log.h" />
+    <ClInclude Include="include\native\managers\input.h" />
+    <ClInclude Include="include\native\core\root.h" />
+    <ClInclude Include="include\native\managers\scene.h" />
+    <ClInclude Include="include\native\managers\shaders.h" />
+    <ClInclude Include="include\native\managers\window.h" />
+    <ClInclude Include="include\native\core\obsidian.h" />
+    <ClInclude Include="include\native\core\include.h" />
+    <ClInclude Include="include\native\util\variadic.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include=".gitignore" />
+    <None Include="config.yaml" />
+    <None Include="include\external\glfw\LICENSE.md" />
+    <None Include="LICENSE" />
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="include\external\glfw\glfw3.lib" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
@@ -82,18 +180,22 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <AdditionalIncludeDirectories>$(SolutionDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(VK_SDK_PATH)\Include;$(SolutionDir)include\external;$(SolutionDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <CompileAs>Default</CompileAs>
+      <LanguageStandard_C>stdclatest</LanguageStandard_C>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(VULKAN_SDK)\Lib32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -102,23 +204,27 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;LOGURU_WITH_STREAMS=1;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <AdditionalIncludeDirectories>$(SolutionDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(VK_SDK_PATH)\Include;$(SolutionDir)include\external;$(SolutionDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <CompileAs>Default</CompileAs>
+      <LanguageStandard_C>stdclatest</LanguageStandard_C>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(VULKAN_SDK)\Lib32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;LOGURU_WITH_STREAMS=1;%(PreprocessorDefinitions);LOGURU_WITH_STREAMS=1;_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
@@ -126,11 +232,15 @@
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
-      <AdditionalIncludeDirectories>$(SolutionDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(VK_SDK_PATH)\Include;$(SolutionDir)include\external;$(SolutionDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <CompileAs>Default</CompileAs>
+      <LanguageStandard_C>stdclatest</LanguageStandard_C>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(VULKAN_SDK)\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -139,16 +249,20 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;LOGURU_WITH_STREAMS=1;%(PreprocessorDefinitions);LOGURU_WITH_STREAMS=1;_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <AdditionalIncludeDirectories>$(SolutionDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)include\external\plog\include;$(VK_SDK_PATH)\Include;$(SolutionDir)include\external;$(SolutionDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <CompileAs>Default</CompileAs>
+      <LanguageStandard_C>stdclatest</LanguageStandard_C>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(VULKAN_SDK)\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
