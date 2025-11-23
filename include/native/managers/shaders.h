@@ -1,7 +1,11 @@
 #pragma once
 
-#include <native/core/root.h>
-#include <native/util/variadic.h>
+#include <native/core/obsidian/include.h>
+#include <native/core/obsidian/root.h>
+
+#include <native/util/utils.h>
+#include <native/util/generic.h>
+#include <native/util/glsl.h>
 
 enum class ShaderType
 {
@@ -68,7 +72,7 @@ struct Pipeline
 {
 	using ShaderMap = std::unordered_map<ShaderType, std::vector<avk::shader_info>>;
 	using AvkPipeline = std::variant<std::monostate, avk::graphics_pipeline, avk::ray_tracing_pipeline, avk::compute_pipeline>;
-
+	
 	Pipeline() = default;
 
 	void add_shader(ShaderType type, const avk::shader_info& shader_info);
@@ -79,6 +83,26 @@ struct Pipeline
 	bool has_shader(ShaderType type) const;
 	bool is_built() const;
 	
+	template<IsValidPipeline T>
+	T& get()
+	{
+		if (std::holds_alternative<T>(this->m_pipeline)) {
+			return std::get<T>(this->m_pipeline);
+		}
+
+		throw_mismatch_error<T>();
+	}
+
+	template<IsValidPipeline T>
+	const T& get() const
+	{
+		if (std::holds_alternative<T>(this->m_pipeline)) {
+			return std::get<T>(this->m_pipeline);
+		}
+
+		throw_mismatch_error<T>();
+	}
+	
 private:
 	friend class ShaderManager;
 
@@ -87,15 +111,39 @@ private:
 	ShaderMap m_shaders;
 	AvkPipeline m_pipeline;
 	std::size_t m_elements = 0;
+
+	template <typename RequestedType>
+	void throw_mismatch_error() const
+	{
+		if (std::holds_alternative<std::monostate>(this->m_pipeline) && !this->m_built) {
+			throw std::runtime_error("Pipeline access error: The pipeline has not been built yet.");
+		}
+
+		std::string msg = "Pipeline access error: Requested type does not match active type.\n";
+		msg += "Requested: " + std::string(typeid(RequestedType).name()) + "\n";
+
+		std::visit([&](auto&& arg) {
+			using ActiveType = std::decay_t<decltype(arg)>;
+			msg += "Active:    " + std::string(typeid(ActiveType).name());
+			}, m_pipeline);
+
+		throw std::runtime_error(msg);
+	}
 };
 
 class ShaderManager
 {
 public:
 	ShaderManager() = default;
-	ShaderManager(Root& root) : m_root(root) { }
+	ShaderManager(Root& root) : m_root(root) {
+		SpirvTranslator::init(); // Maybe abstract into translator...
+	}
+	~ShaderManager()
+	{
+		SpirvTranslator::finalize();
+	}
 
-	void load(std::string path);
+	void load(const std::string& shader_path, const std::string& compile_path);
 	Pipeline& get_pipeline(const std::string& name);
 	void build_pipeline(const std::string& name, const PipelineOptions& options = PipelineOptions(), avk::renderpass renderpass = avk::renderpass(), uint32_t push_constant_size = 128);
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <native/core/include.h>
+#include <native/core/obsidian/include.h>
 
 struct Config
 {

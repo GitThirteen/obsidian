@@ -42,7 +42,7 @@ bool Pipeline::is_built() const
 	return this->m_built;
 }
 
-void ShaderManager::load(std::string path)
+void ShaderManager::load(const std::string& shader_path, const std::string& compile_path)
 {
 	struct ShaderLoadInfo
 	{
@@ -73,7 +73,7 @@ void ShaderManager::load(std::string path)
 		{ ".comp", { PipelineType::Compute, ShaderType::Compute, "compute", avk::compute_shader } },
 	};
 
-	for (const auto& entry : std::filesystem::directory_iterator(path))
+	for (const auto& entry : std::filesystem::directory_iterator(shader_path))
 	{
 		if (!entry.is_directory())
 		{
@@ -125,8 +125,28 @@ void ShaderManager::load(std::string path)
 				continue;
 			}
 
-			avk::shader_info info = shader_info.loader(file_path.string(), "main", false);
-			pipeline.add_shader(shader_info.shader_type, info);
+			// Compile GLSL to SPIR-V
+			// TODO: Figure out a way to store in cache (avoid writing to spv file)
+			avk::shader_info glsl_info = shader_info.loader(file_path.string(), "main", false);
+			auto shader_type = avk::to_vk_shader_stage(glsl_info.mShaderType);
+			std::string glsl_code = Utils::read_file(file_path.string());
+
+			std::vector<uint32_t> spirv_binary;
+			bool result = SpirvTranslator::glsl_to_spv(shader_type, glsl_code.c_str(), spirv_binary);
+			if (!result)
+			{
+				LOG_S(ERROR) << "Failed to compile GLSL shader " << file_name << " to SPIR-V.";
+				continue;
+			}
+
+			std::filesystem::path spirv_folder_path = std::filesystem::path(compile_path) / pipeline_name;
+			std::filesystem::create_directories(spirv_folder_path);
+
+			std::filesystem::path spirv_path = spirv_folder_path / (file_path.filename().string() + ".spv");
+			Utils::write_file(spirv_path.string(), spirv_binary);
+
+			avk::shader_info spirv_info = shader_info.loader(spirv_path.string(), "main", false);
+			pipeline.add_shader(shader_info.shader_type, spirv_info);
 		}
 
 		if (pipeline.elements() > 0)
@@ -228,6 +248,9 @@ void ShaderManager::build_graphics_pipeline(Pipeline& pipeline, const PipelineOp
 	config.mColorBlendingPerAttachment.push_back(blending_config);
 	config.mDepthTestConfig = depth_test_config;
 	config.mDepthWriteConfig = depth_write_config;
+
+	config.mDynamicRendering = avk::cfg::dynamic_rendering::disabled();
+	config.mViewportDepthConfig.push_back(avk::cfg::viewport_depth_scissors_config::dynamic(true, true));
 
 	pipeline.m_pipeline = this->m_root.create_graphics_pipeline(std::move(config));
 }
