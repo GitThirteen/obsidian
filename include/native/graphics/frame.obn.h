@@ -34,12 +34,12 @@ public:
 
 	auto submit() -> void
 	{
-		auto& cmdBuffer = current_command_buffer();
+		auto& cmd_buffer = current_command_buffer();
 
 		m_resources.submit(
 			m_curr_frame_index,
 			m_curr_image_index,
-			cmdBuffer
+			cmd_buffer
 		);
 
 		m_curr_frame_index = (m_curr_frame_index + 1) % N;

@@ -65,30 +65,43 @@ auto ResourceManager::destroy() -> void
 
 auto ResourceManager::next_image(uint32_t frame_index) -> std::pair<bool, uint32_t>
 {
-	uint32_t image_index;
-	try
-	{
-		auto result = m_root.device().acquireNextImageKHR(
-			this->m_swapchain.get(), UINT64_MAX, m_image_available_semaphores[frame_index].get(), nullptr, &image_index
-		);
+	auto wait_result = m_root.device().waitForFences(
+		1, &m_in_flight_fences[frame_index].get(), VK_TRUE, UINT64_MAX
+	);
 
-		m_root.device().resetFences(1, &m_in_flight_fences[frame_index].get());
-		return { true, image_index };
-	}
-	catch (...)
+	if (wait_result != vk::Result::eSuccess)
 	{
 		return { false, 0 };
 	}
+
+	uint32_t image_index;
+	auto acquire_result = m_root.device().acquireNextImageKHR(
+		this->m_swapchain.get(), UINT64_MAX, m_image_available_semaphores[frame_index].get(), nullptr, &image_index
+	);
+
+	if (acquire_result != vk::Result::eSuccess)
+	{
+		return { false, 0 };
+	}
+	
+	auto reset_result = m_root.device().resetFences(1, &m_in_flight_fences[frame_index].get());
+	
+	if (reset_result != vk::Result::eSuccess)
+	{
+		return { false, 0 };
+	}
+
+	return { true, image_index };
 }
 
 auto ResourceManager::submit(uint32_t frame_index, uint32_t image_index, avk::command_buffer& cmd) -> void
 {
-	vk::Semaphore vk_wait_semaphore = this->m_image_available_semaphores[image_index].get();
+	vk::Semaphore vk_wait_semaphore = this->m_image_available_semaphores[frame_index].get();
 	vk::Semaphore vk_signal_semaphore = m_render_finished_semaphores[image_index].get();
 	vk::PipelineStageFlags vk_wait_stage = vk::PipelineStageFlagBits::eColorAttachmentOutput;
 	vk::SwapchainKHR vk_swapchain = m_swapchain.get();
 	vk::Fence fence = m_in_flight_fences[frame_index].get();
-	vk::CommandBuffer vk_cmd_buffer = cmd.get().handle();
+	vk::CommandBuffer vk_cmd_buffer = cmd->handle();
 
 	vk::SubmitInfo submit_info{};
 	submit_info.setWaitSemaphoreCount(1);

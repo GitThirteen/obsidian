@@ -21,7 +21,7 @@ auto Obsidian::flow() -> void
         }
 
         auto& buffer = this->frame.current_command_buffer();
-        auto& framebuffer = resources.framebuffer(frame.current_frame_index());
+        auto& framebuffer = resources.framebuffer(frame.current_image_index());
         auto& pipeline = this->shaders.get_pipeline("test").get<avk::graphics_pipeline>();
 
         auto& scene = this->scenes.active_scene();

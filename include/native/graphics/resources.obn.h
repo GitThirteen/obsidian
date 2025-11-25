@@ -22,7 +22,7 @@ public:
 	auto renderpass() const -> const avk::renderpass { return m_renderpass; }
 	auto color_format() const -> const vk::Format { return m_color_format; }
 	auto depth_format() const -> const vk::Format { return m_depth_format; }
-	auto framebuffer(uint32_t frame_index) const -> const avk::framebuffer& { return m_framebuffers[frame_index]; }
+	auto framebuffer(uint32_t image_index) const -> const avk::framebuffer& { return m_framebuffers[image_index]; }
 	auto depth_view() const -> const avk::image_view { return m_depth_view; }
 	auto command_pool() -> avk::command_pool& { return m_command_pool; }
 	auto descriptor_pool() -> avk::descriptor_pool& { return m_descriptor_pool; }
