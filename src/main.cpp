@@ -1,6 +1,18 @@
 #include <native/core/obsidian.h>
 #include <native/scene/primitives.h>
 
+/* !==== BASE TODO ====! */
+// [ ] Automatically load render pass from config into renderer, provide default if nothing specified
+// [ ] Automatically load specified pipelines from config into renderer, load all if nothing specified
+// [ ] Simplify & abstract main render loop
+// [ ] Implement object materials
+// [ ] Implement lighting
+// [ ] Implement Blinn-Phong
+// [ ] Load geometry (.obj files at the very least) from a file path into the renderer using tinyobjloader
+// [ ] Implement texturing (each material may have one texture)
+// [ ] Automatically create scenes by loading objects from scene descriptions into renderer
+/* !===================! */
+
 int main(int c, char* v[])
 {
 	Logger::initialize(c, v, "obsidian.log");

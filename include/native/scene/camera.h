@@ -16,16 +16,15 @@ struct CameraOptions
 	float fov = 45.0f;
 	float aspect_ratio = 16.0f / 9.0f;
 	float near_plane = 0.1f;
-	float far_plane = 100.0f;
 };
 
 struct CameraVectors
 {
 	glm::vec3 position;
 	glm::vec3 front;
-	glm::vec3 up;
 	glm::vec3 right;
-	glm::vec3 world_up = glm::vec3(0.0f, 1.0f, 0.0f);
+	glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
+	const glm::vec3 world_up = glm::vec3(0.0f, 1.0f, 0.0f);
 };
 
 // Camera Base Class

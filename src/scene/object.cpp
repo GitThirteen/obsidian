@@ -3,15 +3,15 @@
 SceneObject::SceneObject(Root& root, GeometryData data, std::string name) : m_geometry(std::move(data)), m_name(std::move(name))
 {
     m_vertex_buffer = root.create_buffer(
-        avk::memory_usage::device,
-        vk::BufferUsageFlagBits::eStorageBuffer,
+        avk::memory_usage::host_visible,
+        vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst,
         avk::vertex_buffer_meta::create_from_data(m_geometry.vertices)
     );
     m_vertex_buffer->fill(m_geometry.vertices.data(), 0);
 
     m_index_buffer = root.create_buffer(
-        avk::memory_usage::device,
-        vk::BufferUsageFlagBits::eIndexBuffer,
+        avk::memory_usage::host_visible,
+        vk::BufferUsageFlagBits::eIndexBuffer | vk::BufferUsageFlagBits::eTransferDst,
         avk::index_buffer_meta::create_from_data(m_geometry.indices)
     );
     m_index_buffer->fill(m_geometry.indices.data(), 0);

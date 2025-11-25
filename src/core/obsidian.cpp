@@ -26,7 +26,7 @@ auto Obsidian::flow() -> void
 
         auto& scene = this->scenes.active_scene();
         auto& camera = scene.active_camera();
-        const auto extent = root.physical_device().getSurfaceCapabilitiesKHR(window.surface()).currentExtent;
+        const auto& extent = window.extent();
 
         camera.set_aspect_ratio((float) extent.width, (float) extent.height);
         glm::mat4 viewproj = camera.get_view_projection();
@@ -39,8 +39,8 @@ auto Obsidian::flow() -> void
                     avk::command::bind_pipeline(pipeline.as_reference()),
 
                     avk::command::custom_commands([&](avk::command_buffer_t& cmd_buffer) {
-                        vk::Viewport viewport{ 0.0f, 0.0f, (float)extent.width, (float)extent.height, 0.0f, 1.0f };
-                        vk::Rect2D scissor{ {0, 0}, extent };
+                        vk::Viewport viewport{ 0.0f, 0.0f, (float) extent.width, (float) extent.height, 0.0f, 1.0f };
+                        vk::Rect2D scissor{ { 0, 0 }, extent };
                         cmd_buffer.handle().setViewport(0, 1, &viewport);
                         cmd_buffer.handle().setScissor(0, 1, &scissor);
                     }),
@@ -50,36 +50,21 @@ auto Obsidian::flow() -> void
                     {
                         if (!obj->has_descriptor_set())
                         {
-                            obj->create_descriptor_set(
-                                resources.descriptor_pool(),
-                                pipeline,
-                                this->root
-                            );
+                            obj->create_descriptor_set(resources.descriptor_pool(), pipeline, this->root);
                         }
 
-                        cmd_buffer.handle().bindDescriptorSets(
-                            vk::PipelineBindPoint::eGraphics,
-                            pipeline->layout_handle(),
-                            0,
-                            1,
-                            &obj->descriptor_set(),
-                            0,
-                            nullptr
-                        );
+                        cmd_buffer.handle().bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeline->layout_handle(), 0, 1, &obj->descriptor_set(), 0, nullptr);
 
                         struct PushData { glm::mat4 vp; glm::mat4 m; };
                         PushData pcData{ viewproj, obj->model_matrix() };
 
-                        cmd_buffer.handle().pushConstants(
-                            pipeline->layout_handle(),
-                            vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment,
-                            0,
-                            sizeof(PushData),
-                            &pcData
-                        );
+                        auto shader_stages = vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment; // These need to be inferred from the present shaders! (from the pipeline obj)
+                        cmd_buffer.handle().pushConstants(pipeline->layout_handle(), shader_stages, 0, sizeof(PushData), &pcData);
 
-                        cmd_buffer.handle().bindIndexBuffer(obj->index_buffer()->handle(), 0, vk::IndexType::eUint32);
-                        cmd_buffer.handle().drawIndexed(obj->index_count(), 1, 0, 0, 0);
+                        if (obj->index_count() > 0) {
+                            cmd_buffer.handle().bindIndexBuffer(obj->index_buffer()->handle(), 0, vk::IndexType::eUint32);
+                            cmd_buffer.handle().drawIndexed(obj->index_count(), 1, 0, 0, 0);
+                        }
                     }
                 })
             })

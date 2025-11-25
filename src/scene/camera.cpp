@@ -15,15 +15,17 @@ glm::mat4 Camera::get_view_matrix() const
 
 glm::mat4 Camera::get_projection_matrix() const
 {
-	auto proj = glm::perspective(
-		glm::radians(this->m_options.fov),
-		this->m_options.aspect_ratio,
-		this->m_options.near_plane,
-		this->m_options.far_plane
-	);
+	// Reverse-Z, see also https://developer.nvidia.com/blog/visualizing-depth-precision/
+	float f = 1.0f / std::tan(glm::radians(m_options.fov) * 0.5f);
 
-	// We're flipping the y-axis because glm assumes +y to be up, but vulkan assumes +y to be down
-	proj[1][1] *= -1;
+	glm::mat4 proj(0.0f);
+
+	proj[0][0] = f / m_options.aspect_ratio;
+	proj[1][1] = -f; // Vulkan y-flip
+	proj[2][2] = 0.0f;
+	proj[2][3] = -1.0f;
+	proj[3][2] = m_options.near_plane;
+
 	return proj;
 }
 
@@ -79,7 +81,7 @@ void Camera::update_vectors()
 	auto& up = this->m_cam_vectors.up;
 	
 	front = glm::normalize(f);
-	right = glm::normalize(glm::cross(front, up));
+	right = glm::normalize(glm::cross(front, m_cam_vectors.world_up));
 	up = glm::normalize(glm::cross(right, front));
 }
 
@@ -112,12 +114,13 @@ void UserCamera::process_keyboard(double dt)
 {
 	float velocity = this->m_speed * (float) dt;
 	const glm::vec3& front = this->m_cam_vectors.front;
+	const glm::vec3& right = this->m_cam_vectors.right;
 	glm::vec3& position = this->m_cam_vectors.position;
 
 	if (glfwGetKey(this->m_glfw_window, GLFW_KEY_W) == GLFW_PRESS) position += front * velocity;
 	if (glfwGetKey(this->m_glfw_window, GLFW_KEY_S) == GLFW_PRESS) position -= front * velocity;
-	if (glfwGetKey(this->m_glfw_window, GLFW_KEY_A) == GLFW_PRESS) position -= front * velocity;
-	if (glfwGetKey(this->m_glfw_window, GLFW_KEY_D) == GLFW_PRESS) position += front * velocity;
+	if (glfwGetKey(this->m_glfw_window, GLFW_KEY_A) == GLFW_PRESS) position -= right * velocity;
+	if (glfwGetKey(this->m_glfw_window, GLFW_KEY_D) == GLFW_PRESS) position += right * velocity;
 }
 
 void UserCamera::process_mouse()

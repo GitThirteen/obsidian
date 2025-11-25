@@ -237,19 +237,20 @@ void ShaderManager::build_graphics_pipeline(Pipeline& pipeline, const PipelineOp
 	auto blending_config = options.alpha_blending
 		? avk::cfg::color_blending_config::enable_alpha_blending_for_attachment(0)
 		: avk::cfg::color_blending_config::disable_blending_for_attachment(0);
-
-	auto depth_test_config = options.depth_test
-		? avk::cfg::depth_test::enabled()
-		: avk::cfg::depth_test::disabled();
-
-	auto depth_write_config = options.depth_write
-		? avk::cfg::depth_write::enabled()
-		: avk::cfg::depth_write::disabled();
-
 	config.mColorBlendingPerAttachment.push_back(blending_config);
-	config.mDepthTestConfig = depth_test_config;
-	config.mDepthWriteConfig = depth_write_config;
 
+	if (options.depth_test)
+	{
+		auto depth_test = avk::cfg::depth_test::enabled();
+		depth_test.set_compare_operation(avk::cfg::compare_operation::greater_or_equal);
+		config.mDepthTestConfig = depth_test;
+	}
+	else
+	{
+		config.mDepthTestConfig = avk::cfg::depth_test::disabled();
+	}
+
+	config.mDepthWriteConfig.mEnabled = options.depth_write;
 	config.mDynamicRendering = avk::cfg::dynamic_rendering::disabled();
 	config.mViewportDepthConfig.push_back(avk::cfg::viewport_depth_scissors_config::dynamic(true, true));
 

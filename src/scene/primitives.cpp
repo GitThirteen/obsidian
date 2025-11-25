@@ -59,10 +59,10 @@ GeometryData Primitives::_generate_cube_gm()
 		uint32_t startIdx = static_cast<uint32_t>(data.vertices.size());
 
 		// Vertices, Normals, UV
-		data.vertices.push_back({ bl, normal, {0.0f, 0.0f} }); // 0: Bottom-Left
-		data.vertices.push_back({ br, normal, {1.0f, 0.0f} }); // 1: Bottom-Right
-		data.vertices.push_back({ tr, normal, {1.0f, 1.0f} }); // 2: Top-Right
-		data.vertices.push_back({ tl, normal, {0.0f, 1.0f} }); // 3: Top-Left
+		data.vertices.push_back({ bl, normal, {0.0f, 0.0f} });
+		data.vertices.push_back({ br, normal, {1.0f, 0.0f} });
+		data.vertices.push_back({ tr, normal, {1.0f, 1.0f} });
+		data.vertices.push_back({ tl, normal, {0.0f, 1.0f} });
 
 		// Indices
 		data.indices.push_back(startIdx + 0);
@@ -87,12 +87,12 @@ GeometryData Primitives::_generate_sphere_gm(int sectors, int stacks)
 {
 	GeometryData data;
 	float radius = 0.5f;
-	float sectorStep = 2 * glm::pi<float>() / sectors;
-	float stackStep = glm::pi<float>() / stacks;
+	float sectorStep = OBN_TWOPI / sectors;
+	float stackStep = OBN_PI / stacks;
 
 	for (int i = 0; i <= stacks; ++i)
 	{
-		float stackAngle = glm::pi<float>() / 2 - i * stackStep;
+		float stackAngle = OBN_PI * 0.5f - i * stackStep;
 		float xy = radius * cosf(stackAngle);
 		float z = radius * sinf(stackAngle);
 
@@ -109,8 +109,8 @@ GeometryData Primitives::_generate_sphere_gm(int sectors, int stacks)
 			vertex.normal = glm::normalize(vertex.pos);
 
 			// UV Coordinates
-			vertex.uv.s = (float)j / sectors;
-			vertex.uv.t = (float)i / stacks;
+			vertex.uv.x = (float) j / sectors;
+			vertex.uv.y = (float) i / stacks;
 
 			data.vertices.push_back(vertex);
 		}

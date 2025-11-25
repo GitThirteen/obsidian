@@ -1,11 +1,23 @@
-# Setup
+# System settings
 title: "Obsidian Engine"
+fps: 144
+resizable: true
 dimensions:
     width: 1920
     height: 1080
-resizable: true
-fps: 144
 
-# Shaders (ignored for now)
-pipeline-order:
-    - "triangle"
+# Renderer
+renderpass:
+    clear_color: [0.0, 0.0, 0.0, 1.0] # [R, G, B, A]
+    attachments:
+        - type: "color"
+          load: "clear"       # clear, load, dont_care
+          store: "store"      # store, dont_care
+          layout: "present"   # present, color_optimal
+
+        - type: "depth"
+          load: "clear"
+          store: "dont_care"
+
+pipelines:
+    - name: "test"

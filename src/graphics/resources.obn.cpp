@@ -48,7 +48,7 @@ auto ResourceManager::create_renderpass() -> void
 			avk::on_load::clear.from_previous_layout(avk::layout::undefined),
 			avk::usage::depth_stencil,
 			avk::on_store::dont_care
-		)
+		).set_depth_clear_value(0.0f).set_stencil_clear_value(0)
 	});
 
 	m_renderpass = default_pass;

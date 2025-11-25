@@ -37,6 +37,7 @@ struct PipelineOptions
 	avk::cfg::polygon_drawing_mode polygon_mode = avk::cfg::polygon_drawing_mode::fill;
 	avk::cfg::culling_mode cull_mode = avk::cfg::culling_mode::cull_back_faces;
 	avk::cfg::front_face front_face = avk::cfg::front_face::define_front_faces_to_be_counter_clockwise();
+	avk::cfg::compare_operation compare_operation = avk::cfg::compare_operation::greater_or_equal;
 
 	bool depth_test = true;
 	bool depth_write = true;

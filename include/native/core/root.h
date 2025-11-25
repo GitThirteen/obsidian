@@ -59,7 +59,8 @@ public:
         };
 
         m_instance = vk::createInstanceUnique(create_info, nullptr, m_dispatch_loader_core);
-        if (!m_instance) {
+        if (!m_instance)
+        {
             LOG_S(ERROR) << "Instance creation failed!";
             throw std::runtime_error("Vulkan Init Failed");
         }
@@ -79,7 +80,8 @@ public:
 
         // --- E. Find Queue Family ---
         auto candidates = avk::queue::find_best_queue_family_for(physical_device(), {}, avk::queue_selection_preference::versatile_queue, {});
-        if (candidates.empty()) {
+        if (candidates.empty())
+        {
             throw std::runtime_error("No suitable queue family found!");
         }
         uint32_t family_index = std::get<0>(candidates.front());
@@ -88,7 +90,8 @@ public:
         auto queues = avk::make_vector(avk::queue::prepare(this, family_index, 0));
         auto config = avk::queue::get_queue_config_for_DeviceCreateInfo(std::begin(queues), std::end(queues));
 
-        for (auto i = 0; i < std::get<0>(config).size(); ++i) {
+        for (auto i = 0; i < std::get<0>(config).size(); ++i)
+        {
             std::get<0>(config)[i].setPQueuePriorities(std::get<1>(config)[i].data());
         }
 
@@ -97,12 +100,16 @@ public:
             VK_KHR_CREATE_RENDERPASS_2_EXTENSION_NAME
         };
 
-        vk::DeviceCreateInfo deviceCreateInfo{};
-        deviceCreateInfo.setQueueCreateInfoCount(1u);
-        deviceCreateInfo.setPQueueCreateInfos(std::get<0>(config).data());
-        deviceCreateInfo.setPEnabledExtensionNames(device_extensions);
+        vk::PhysicalDeviceScalarBlockLayoutFeatures scalar_features{};
+        scalar_features.setScalarBlockLayout(VK_TRUE);
 
-        m_device = physical_device().createDeviceUnique(deviceCreateInfo, nullptr, m_dispatch_loader_core);
+        vk::DeviceCreateInfo device_create_info{};
+        device_create_info.setQueueCreateInfoCount(1u);
+        device_create_info.setPQueueCreateInfos(std::get<0>(config).data());
+        device_create_info.setPEnabledExtensionNames(device_extensions);
+        device_create_info.setPNext(&scalar_features);
+
+        m_device = physical_device().createDeviceUnique(device_create_info, nullptr, m_dispatch_loader_core);
 
         // --- G. Initialize Device Dispatchers ---
         if constexpr (std::is_same_v<std::remove_cv_t<decltype(m_dispatch_loader_core)>, vk::detail::DispatchLoaderDynamic>) {
