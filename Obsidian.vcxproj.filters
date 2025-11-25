@@ -15,13 +15,13 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\managers\window.cpp">
+    <ClCompile Include="src\platform\window.obn.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\core\obsidian\root.cpp">
+    <ClCompile Include="src\core\root.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\util\config.cpp">
+    <ClCompile Include="src\core\config.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\external\avk.cpp">
@@ -30,10 +30,10 @@
     <ClCompile Include="src\external\ryml.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\managers\shaders.cpp">
+    <ClCompile Include="src\graphics\shaders.obn.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\core\obsidian\obsidian.cpp">
+    <ClCompile Include="src\core\obsidian.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\main.cpp">
@@ -42,19 +42,16 @@
     <ClCompile Include="include\external\loguru\loguru.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\core\obsidian.cpp">
+    <ClCompile Include="src\platform\input.obn.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\managers\event.cpp">
+    <ClCompile Include="src\core\timer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\util\timer.cpp">
+    <ClCompile Include="src\graphics\compiler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\util\glsl.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\util\utils.cpp">
+    <ClCompile Include="src\utils\io.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="include\external\glm\detail\glm.cpp">
@@ -63,36 +60,42 @@
     <ClCompile Include="include\external\glm\glm.cppm">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\core\scene\object.cpp">
+    <ClCompile Include="src\scene\object.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\util\primitives.cpp">
+    <ClCompile Include="src\scene\primitives.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\core\scene\camera.cpp">
+    <ClCompile Include="src\scene\camera.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\managers\scene.cpp">
+    <ClCompile Include="src\scene\scene.obn.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\graphics\resources.obn.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\graphics\descriptors.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\native\core\obsidian\include.h">
+    <ClInclude Include="include\native\core\include.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\native\core\obsidian\obsidian.h">
+    <ClInclude Include="include\native\core\obsidian.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\native\core\obsidian\root.h">
+    <ClInclude Include="include\native\core\root.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\native\managers\scene.h">
+    <ClInclude Include="include\native\scene\scene.obn.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\native\managers\window.h">
+    <ClInclude Include="include\native\platform\window.obn.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\native\util\config.h">
+    <ClInclude Include="include\native\core\config.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\external\avk\acceleration_structure_size_requirements.hpp">
@@ -311,13 +314,13 @@
     <ClInclude Include="include\external\yaml\ryml.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\native\managers\shaders.h">
+    <ClInclude Include="include\native\graphics\shaders.obn.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\native\core\obsidian\log.h">
+    <ClInclude Include="include\native\core\log.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\native\util\generic.h">
+    <ClInclude Include="include\native\utils\templates.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\external\glfw\glfw3.h">
@@ -326,19 +329,19 @@
     <ClInclude Include="include\external\loguru\loguru.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\native\managers\event.h">
+    <ClInclude Include="include\native\platform\input.obn.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\native\util\primitives.h">
+    <ClInclude Include="include\native\scene\primitives.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\native\util\timer.h">
+    <ClInclude Include="include\native\core\timer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\native\managers\frame.h">
+    <ClInclude Include="include\native\graphics\frame.obn.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\native\util\glsl.h">
+    <ClInclude Include="include\native\graphics\compiler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\external\glslang\Include\glslang_c_interface.h">
@@ -380,10 +383,10 @@
     <ClInclude Include="include\external\glslang\build_info.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\native\util\utils.h">
+    <ClInclude Include="include\native\utils\io.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\native\core\scene\object.h">
+    <ClInclude Include="include\native\scene\object.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\external\glm\detail\_features.hpp">
@@ -1256,10 +1259,19 @@
     <ClInclude Include="include\external\glm\vector_relational.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\native\core\scene\camera.h">
+    <ClInclude Include="include\native\scene\camera.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\native\core\scene\emitter.h">
+    <ClInclude Include="include\native\scene\light.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\native\graphics\resources.obn.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\native\platform\ui.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\native\graphics\descriptors.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
