@@ -4,25 +4,29 @@
 #include <native/core/root.h>
 #include <native/platform/window.obn.h>
 
+struct Shard
+{
+	avk::renderpass renderpass;
+	std::vector<avk::framebuffer> framebuffers;
+	std::vector<std::string> pipelines;
+	bool is_swapchain_target = false;
+};
+
 class ResourceManager
 {
 public:
 	ResourceManager(Root& root, WindowManager& window) : m_root(root), m_window(window) { }
 
 	auto initialize() -> void;
-	auto create_depth_buffer() -> void;
-	auto create_frame_buffers() -> void;
-	auto create_renderpass() -> void;
-	//void recreate_swapchain();
+	//auto recreate_swapchain() -> void;
 	auto destroy() -> void;
 
 	auto next_image(uint32_t frame_index) -> std::pair<bool, uint32_t>;
 	auto submit(uint32_t frame_index, uint32_t image_index, avk::command_buffer& cmd) -> void;
 
-	auto renderpass() const -> const avk::renderpass { return m_renderpass; }
+	auto shards() const -> const std::unordered_map<std::string, Shard>& { return m_shards; }
 	auto color_format() const -> const vk::Format { return m_color_format; }
 	auto depth_format() const -> const vk::Format { return m_depth_format; }
-	auto framebuffer(uint32_t image_index) const -> const avk::framebuffer& { return m_framebuffers[image_index]; }
 	auto depth_view() const -> const avk::image_view { return m_depth_view; }
 	auto command_pool() -> avk::command_pool& { return m_command_pool; }
 	auto descriptor_pool() -> avk::descriptor_pool& { return m_descriptor_pool; }
@@ -31,7 +35,7 @@ public:
 private:
 	Root& m_root;
 	WindowManager& m_window;
-	avk::renderpass m_renderpass;
+	std::unordered_map<std::string, Shard> m_shards;
 
 	// Swapchain
 	vk::UniqueSwapchainKHR m_swapchain;
@@ -40,7 +44,6 @@ private:
 	vk::Extent2D m_extent;
 
 	// Buffers
-	std::vector<avk::framebuffer> m_framebuffers;
 	std::vector<avk::image> m_swapchain_images;
 	std::vector<avk::image_view> m_swapchain_views;
 	avk::image m_depth_image;
@@ -58,4 +61,6 @@ private:
 	auto create_swapchain() -> void;
 	auto create_syncers() -> void;
 	auto create_pools() -> void;
+	auto create_shards() -> void;
+	auto create_depth_buffer() -> void;
 };

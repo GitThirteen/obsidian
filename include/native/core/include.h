@@ -76,6 +76,9 @@ concept IsValidPipeline = std::same_as<T, avk::graphics_pipeline> || std::same_a
 template<typename T>
 concept IsBinaryContainer = std::ranges::contiguous_range<T> && std::ranges::sized_range<T> && std::is_trivially_copyable_v<std::ranges::range_value_t<T>>;
 
+template<typename T>
+concept IsVector = std::same_as<T, std::vector<typename T::value_type, typename T::allocator_type>>;
+
 #define OBN_DEFAULT_COLOR_FORMAT vk::Format::eB8G8R8A8Unorm
 #define OBN_DEFAULT_DEPTH_FORMAT vk::Format::eD32Sfloat
 #define OBN_DEFAULT_COLOR_SPACE  vk::ColorSpaceKHR::eSrgbNonlinear

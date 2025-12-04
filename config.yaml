@@ -1,23 +1,39 @@
-# System settings
+# System settings.
 title: "Obsidian Engine"
 fps: 144
 resizable: true
 dimensions:
-    width: 1920
-    height: 1080
+  width: 1920
+  height: 1080
+vsync: false # doesn't do anything yet
+fullscreen: false # doesn't do anything yet
+buffering: 3 # doesn't do anything yet
+icon: "assets/icon.png" # doesn't do anything yet
 
-# Renderer
-renderpass:
-    clear_color: [0.0, 0.0, 0.0, 1.0] # [R, G, B, A]
+# Render shards are defined here. A shard has the following structure:
+# - name: Unique identifier for the shard
+# - target: The render target (e.g., screen, texture)
+# - clear_color: The color used to clear the screen at the start of the pass
+# - attachments: List of attachments with their load/store operations and layouts
+# - layers: The layers to be rendered in this pass
+# - pipelines: The rendering pipelines to be used in this pass
+# If no shards are defined, a default shard will be created automatically.
+shards:
+  - name: "main"
+    target: "screen"
+    clear_color: [0.0, 0.0, 0.0, 1.0]
     attachments:
-        - type: "color"
-          load: "clear"       # clear, load, dont_care
-          store: "store"      # store, dont_care
-          layout: "present"   # present, color_optimal
+      - type: "color"
+        load: "clear"
+        store: "store"
+        layout: "present"
+      - type: "depth"
+        load: "clear"
+        store: "dont_care"
+    layers: ["default"]
+    pipelines: ["base"]
 
-        - type: "depth"
-          load: "clear"
-          store: "dont_care"
-
-pipelines:
-    - name: "test"
+# Define the order in which shards are rendered.
+# If not specified, shards will be rendered in the order they are defined.
+order:
+  - "main"

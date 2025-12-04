@@ -266,7 +266,7 @@ void ShaderManager::build_graphics_pipeline(Pipeline& pipeline, const PipelineOp
 
 	config.mResourceBindings.push_back(std::move(vbb));
 
-	pipeline.m_pipeline = this->m_root.create_graphics_pipeline(std::move(config));
+	pipeline.m_pipeline = this->m_root.create_graphics_pipeline(std::move(config)); // TODO IO-avoid: look at root::build_shader_module_from_binary_code...
 }
 
 void ShaderManager::build_raytracing_pipeline(Pipeline& pipeline, const PipelineOptions& options, uint32_t push_constant_size)

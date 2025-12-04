@@ -11,6 +11,11 @@
 // [ ] Load geometry (.obj files at the very least) from a file path into the renderer using tinyobjloader
 // [ ] Implement texturing (each material may have one texture)
 // [ ] Automatically create scenes by loading objects from scene descriptions into renderer
+// ===============================================================
+// [ ] 4x MSAA
+// [ ] Avoid write when compiling from GLSL to SPIR-V
+// [ ] Properly destroy objects, resources, etc. on shutdown
+// [ ] Add audio support
 /* !===================! */
 
 int main(int c, char* v[])

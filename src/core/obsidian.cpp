@@ -2,7 +2,7 @@
 
 auto Obsidian::flow() -> void
 {
-	int fps = Config::get<int>("fps");
+    int fps = Config::get<int>("fps");
 	m_timer = FrameTimer(fps);
 
     while (!window.should_close())
@@ -10,28 +10,33 @@ auto Obsidian::flow() -> void
         m_timer.tick();
         events.poll();
 
-        const auto renderpass = resources.renderpass();
-
         scenes.process_input();
         scenes.update(m_timer.dt());
 
         if (!frame.ready())
-        { 
+        {
             continue;
         }
 
-        auto& buffer = this->frame.current_command_buffer();
-        auto& framebuffer = resources.framebuffer(frame.current_image_index());
-        auto& pipeline = this->shaders.get_pipeline("test").get<avk::graphics_pipeline>();
+        uint32_t image_index = frame.current_image_index();
+		auto& command_buffer = frame.current_command_buffer();
 
-        auto& scene = this->scenes.active_scene();
+        
+
+        const auto renderpass = resources.renderpass();
+
+        auto& buffer = frame.current_command_buffer();
+        auto& framebuffer = resources.framebuffer(frame.current_image_index());
+        auto& pipeline = shaders.get_pipeline("test").get<avk::graphics_pipeline>();
+
+        auto& scene = scenes.active_scene();
         auto& camera = scene.active_camera();
         const auto& extent = window.extent();
 
         camera.set_aspect_ratio((float) extent.width, (float) extent.height);
         glm::mat4 viewproj = camera.get_view_projection();
 
-        this->root.record({
+        root.record({
             avk::command::render_pass(
                 resources.renderpass().get(),
                 framebuffer.get(),
@@ -50,7 +55,7 @@ auto Obsidian::flow() -> void
                     {
                         if (!obj->has_descriptor_set())
                         {
-                            obj->create_descriptor_set(resources.descriptor_pool(), pipeline, this->root);
+                            obj->create_descriptor_set(resources.descriptor_pool(), pipeline, root);
                         }
 
                         cmd_buffer.handle().bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeline->layout_handle(), 0, 1, &obj->descriptor_set(), 0, nullptr);

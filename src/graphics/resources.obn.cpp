@@ -5,9 +5,8 @@ auto ResourceManager::initialize() -> void
 	create_swapchain();
 	create_pools();
 	create_syncers();
-	create_renderpass();
+	create_shards();
 	create_depth_buffer();
-	create_frame_buffers();
 }
 
 auto ResourceManager::create_depth_buffer() -> void
@@ -22,42 +21,10 @@ auto ResourceManager::create_depth_buffer() -> void
 	m_depth_view = m_root.create_image_view(m_depth_image);
 }
 
-auto ResourceManager::create_frame_buffers() -> void
-{
-	LOG_S(INFO) << "Creating frame buffers...";
-
-	m_framebuffers.clear();
-
-	for (auto& view : m_swapchain_views)
-	{
-		m_framebuffers.push_back(m_root.create_framebuffer(m_renderpass, view, m_depth_view));
-	}
-}
-
-auto ResourceManager::create_renderpass() -> void
-{
-	const avk::renderpass default_pass = m_root.create_renderpass({
-		avk::attachment::declare(
-			m_color_format,
-			avk::on_load::clear.from_previous_layout(avk::layout::undefined),
-			avk::usage::color(0),
-			avk::on_store::store.in_layout(avk::layout::present_src)
-		).set_clear_color({ 1.0f, 0.0f, 1.0f, 1.0f }),
-		avk::attachment::declare(
-			m_depth_format,
-			avk::on_load::clear.from_previous_layout(avk::layout::undefined),
-			avk::usage::depth_stencil,
-			avk::on_store::dont_care
-		).set_depth_clear_value(0.0f).set_stencil_clear_value(0)
-	});
-
-	m_renderpass = default_pass;
-}
-
 auto ResourceManager::destroy() -> void
 {
 	m_root.device().waitIdle();
-	m_framebuffers.clear();
+	m_shards.clear();
 	m_swapchain_views.clear();
 	m_swapchain_images.clear();
 	m_swapchain.reset();
@@ -184,19 +151,6 @@ auto ResourceManager::create_swapchain() -> void
 	info.setPresentMode(vk::PresentModeKHR::eMailbox);
 	info.setClipped(VK_TRUE);
 
-	/*info.setSurface(this->m_surface);
-	info.setMinImageCount(std::max(2u, caps.minImageCount + 1));
-	info.setImageFormat(this->m_image_format);
-	info.setImageColorSpace(vk::ColorSpaceKHR::eSrgbNonlinear);
-	info.setImageExtent(this->m_extent);
-	info.setImageArrayLayers(1);
-	info.setImageUsage(vk::ImageUsageFlagBits::eColorAttachment);
-	info.setImageSharingMode(vk::SharingMode::eExclusive);
-	info.setPreTransform(caps.currentTransform);
-	info.setCompositeAlpha(vk::CompositeAlphaFlagBitsKHR::eOpaque);
-	info.setPresentMode(vk::PresentModeKHR::eMailbox);
-	info.setClipped(VK_TRUE);*/
-
 	m_swapchain_images.clear();
 	m_swapchain_views.clear();
 	m_swapchain = m_root.device().createSwapchainKHRUnique(info);
@@ -213,17 +167,6 @@ auto ResourceManager::create_swapchain() -> void
 		image_info.setSamples(vk::SampleCountFlagBits::e1);
 		image_info.setTiling(vk::ImageTiling::eOptimal);
 		image_info.setUsage(vk::ImageUsageFlagBits::eColorAttachment);
-
-		/*image_info.setImageType(vk::ImageType::e2D);
-		image_info.setFormat(m_image_format);
-		image_info.setExtent(vk::Extent3D{ this->m_extent.width, this->m_extent.height, 1 });
-		image_info.setMipLevels(1);
-		image_info.setArrayLayers(1);
-		image_info.setSamples(vk::SampleCountFlagBits::e1);
-		image_info.setTiling(vk::ImageTiling::eOptimal);
-		image_info.setUsage(vk::ImageUsageFlagBits::eColorAttachment);
-		image_info.setSharingMode(vk::SharingMode::eExclusive);
-		image_info.setInitialLayout(vk::ImageLayout::eUndefined);*/
 
 		auto wrapped = m_root.wrap_image(
 			raw_image, image_info, avk::image_usage::color_attachment, vk::ImageAspectFlagBits::eColor
@@ -265,9 +208,128 @@ auto ResourceManager::create_pools() -> void
 	);
 
 	std::vector<vk::DescriptorPoolSize> sizes = {
-		{ vk::DescriptorType::eStorageBuffer, 1000 },
-		{ vk::DescriptorType::eUniformBuffer, 1000 }
+		{ vk::DescriptorType::eStorageBuffer, 1024 },
+		{ vk::DescriptorType::eUniformBuffer, 1024 }
 	};
 
-	m_descriptor_pool = m_root.create_descriptor_pool(sizes, 1000);
+	m_descriptor_pool = m_root.create_descriptor_pool(sizes, 1024);
+}
+
+auto ResourceManager::create_shards() -> void
+{
+	LOG_S(INFO) << "Creating shards...";
+
+	// If no shards are specified, create a default one
+	if (!Config::has_values_for("shards"))
+	{
+		LOG_S(WARNING) << "No shards specified in config, using default instead.";
+
+		const avk::renderpass default_pass = m_root.create_renderpass({
+			avk::attachment::declare(
+				m_color_format,
+				avk::on_load::clear,
+				avk::usage::color(0),
+				avk::on_store::store.in_layout(avk::layout::present_src)
+			).set_clear_color({ 1.0f, 0.0f, 1.0f, 1.0f }),
+			avk::attachment::declare(
+				m_depth_format,
+				avk::on_load::clear,
+				avk::usage::depth_stencil,
+				avk::on_store::dont_care
+			).set_depth_clear_value(0.0f).set_stencil_clear_value(0)
+		});
+
+		Shard default_shard;
+		default_shard.renderpass = default_pass;
+		default_shard.pipelines.push_back("base");
+		default_shard.is_swapchain_target = true;
+
+		for (const auto& view : m_swapchain_views)
+		{
+			default_shard.framebuffers.push_back(m_root.create_framebuffer(default_pass, view, m_depth_view));
+		}
+
+		m_shards.insert({ "default", default_shard });
+		return;
+	}
+
+	// Alternatively, create shards as specified in config
+	auto shard_configs = Config::get<std::vector<ShardConfig>>("shards");
+	for (const auto& shard_config : shard_configs)
+	{
+		Shard shard;
+
+		std::vector<avk::attachment> attachments;
+		for (const auto& attachment_config : shard_config.attachments)
+		{
+			// TODO: Abstract this mapping logic into its own module/function
+
+			vk::Format type 
+				= attachment_config.type == "color" ? m_color_format 
+				: attachment_config.type == "depth" ? m_depth_format 
+				: vk::Format::eUndefined;
+
+			avk::attachment_load_config load
+				= attachment_config.load == "clear" ? avk::on_load::clear
+				: attachment_config.load == "load" ? avk::on_load::load
+				: avk::on_load::dont_care;
+
+			avk::subpass_usages usage
+				= attachment_config.type == "color" ? avk::usage::color(0)
+				: attachment_config.type == "depth" ? avk::usage::depth_stencil
+				: avk::usage::unused;
+
+			avk::attachment_store_config store
+				= attachment_config.store == "store" ? avk::on_store::store
+				: avk::on_store::dont_care;
+
+			avk::layout::image_layout target_layout
+				= attachment_config.layout == "present" ? avk::layout::present_src
+				: attachment_config.layout == "color" ? avk::layout::color_attachment_optimal
+				: attachment_config.layout == "depth" ? avk::layout::depth_stencil_attachment_optimal
+				: attachment_config.layout == "texture" ? avk::layout::shader_read_only_optimal
+				: attachment_config.layout == "generic" ? avk::layout::general
+				: avk::layout::undefined;
+
+			avk::attachment attachment = avk::attachment::declare(
+				type,
+				load,
+				usage,
+				store.in_layout(target_layout)
+			);
+
+			if (attachment_config.type == "color")
+			{
+				attachment
+					.set_clear_color(shard_config.clear_color);
+			}
+			else if (attachment_config.type == "depth")
+			{
+				attachment
+					.set_depth_clear_value(0.0f)
+					.set_stencil_clear_value(0);
+			}
+
+			attachments.push_back(attachment);
+		}
+
+		shard.renderpass = m_root.create_renderpass(attachments);
+		shard.pipelines = shard_config.pipelines;
+		shard.is_swapchain_target = (shard_config.target == "screen");
+		
+		if (shard.is_swapchain_target)
+		{
+			for (const auto& view : m_swapchain_views)
+			{
+				shard.framebuffers.push_back(m_root.create_framebuffer(shard.renderpass, view, m_depth_view));
+			}
+		}
+		else
+		{
+			// TODO: Offscreen handling?
+		}
+
+		m_shards.insert({ shard_config.name, shard });
+		LOG_S(INFO) << "Successfully created shard: " << shard_config.name << ".";
+	}
 }
