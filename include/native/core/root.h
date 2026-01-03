@@ -103,6 +103,17 @@ public:
         vk::PhysicalDeviceScalarBlockLayoutFeatures scalar_features{};
         scalar_features.setScalarBlockLayout(VK_TRUE);
 
+		vk::PhysicalDeviceDynamicRenderingFeatures dynamic_rendering_features{};
+		dynamic_rendering_features.setDynamicRendering(VK_TRUE);
+
+		vk::PhysicalDeviceDescriptorIndexingFeatures descriptor_indexing_features{};
+		descriptor_indexing_features.setRuntimeDescriptorArray(VK_TRUE);
+		descriptor_indexing_features.setDescriptorBindingPartiallyBound(VK_TRUE);
+		descriptor_indexing_features.setDescriptorBindingVariableDescriptorCount(VK_TRUE);
+
+        scalar_features.setPNext(&dynamic_rendering_features);
+		dynamic_rendering_features.setPNext(&descriptor_indexing_features);
+
         vk::DeviceCreateInfo device_create_info{};
         device_create_info.setQueueCreateInfoCount(1u);
         device_create_info.setPQueueCreateInfos(std::get<0>(config).data());
@@ -134,6 +145,25 @@ public:
 
         m_initialized = true;
         LOG_S(INFO) << "Vulkan Root successfully initialized.";
+    }
+
+    void destroy()
+    {
+        if (m_device)
+        {
+            m_device->waitIdle();
+        }
+
+        if (m_memory_allocator)
+        {
+            vmaDestroyAllocator(m_memory_allocator);
+            m_memory_allocator = VK_NULL_HANDLE;
+        }
+
+        if (m_instance && m_debug_messenger) {
+            m_instance->destroyDebugUtilsMessengerEXT(m_debug_messenger, nullptr, m_dispatch_loader_ext);
+			m_debug_messenger = VK_NULL_HANDLE;
+        }
     }
 
     vk::Instance instance() {

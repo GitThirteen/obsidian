@@ -17,15 +17,11 @@ SceneObject::SceneObject(Root& root, GeometryData data, std::string name) : m_ge
     m_index_buffer->fill(m_geometry.indices.data(), 0);
 }
 
-auto SceneObject::create_descriptor_set(avk::descriptor_pool& pool, avk::graphics_pipeline& pipeline, Root& root) -> void
+auto SceneObject::create_descriptor_set(avk::descriptor_pool& pool, const Pipeline& pipeline, Root& root) -> void
 {
     if (has_descriptor_set()) return;
 
-    auto allocated = pool.allocate({
-        pipeline->descriptor_set_layouts().set_at(0)
-    });
-
-    m_descriptor_set = allocated[0];
+	m_descriptor_set = pipeline.make_descriptor_set(pool);
     ShaderDescriptor::write_storage_buffer(root.device(), m_descriptor_set, 0, m_vertex_buffer);
 }
 

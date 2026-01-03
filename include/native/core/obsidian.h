@@ -44,4 +44,6 @@ public:
 
 private:
     FrameTimer m_timer;
+
+    auto command_list(Scene& scene, const std::vector<std::string>& shard_order) -> std::vector<avk::recorded_commands_t>;
 };

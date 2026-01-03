@@ -35,8 +35,16 @@ auto WindowManager::create() -> void
 
 auto WindowManager::destroy() -> void
 {
-    m_root.instance().destroySurfaceKHR(m_surface);
-    glfwDestroyWindow(m_window);
+    if (m_surface)
+    {
+        m_root.instance().destroySurfaceKHR(m_surface);
+    }
+
+    if (m_window)
+    {
+        glfwDestroyWindow(m_window);
+    }
+    
     glfwTerminate();
 }
 

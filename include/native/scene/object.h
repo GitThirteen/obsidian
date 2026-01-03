@@ -3,6 +3,7 @@
 #include <native/core/include.h>
 #include <native/core/root.h>
 #include <native/graphics/descriptors.h>
+#include <native/graphics/shaders.obn.h>
 
 struct Vertex
 {
@@ -28,7 +29,7 @@ struct SceneObject
 {
 	SceneObject(Root& root, GeometryData data, std::string name = "Object");
 
-	auto create_descriptor_set(avk::descriptor_pool& pool, avk::graphics_pipeline& pipeline, Root& root) -> void;
+	auto create_descriptor_set(avk::descriptor_pool& pool, const Pipeline& pipeline, Root& root) -> void;
 
 	auto set_position(const glm::vec3& pos) -> void;
 	auto translate(const glm::vec3& offset) -> void;
@@ -43,6 +44,7 @@ struct SceneObject
 	auto descriptor_set() const -> const vk::DescriptorSet& { return m_descriptor_set; }
 	auto model_matrix() const -> const glm::mat4 { return m_model_matrix; }
 	auto index_buffer() const -> const avk::buffer { return m_index_buffer; }
+	auto vertex_buffer() const -> const avk::buffer { return m_vertex_buffer; }	
 
 private:
 	std::string m_name;

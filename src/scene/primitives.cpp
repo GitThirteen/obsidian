@@ -87,12 +87,12 @@ GeometryData Primitives::_generate_sphere_gm(int sectors, int stacks)
 {
 	GeometryData data;
 	float radius = 0.5f;
-	float sectorStep = OBN_TWOPI / sectors;
-	float stackStep = OBN_PI / stacks;
+	double sectorStep = OBN_TWOPI / sectors;
+	double stackStep = OBN_PI / stacks;
 
 	for (int i = 0; i <= stacks; ++i)
 	{
-		float stackAngle = OBN_PI * 0.5f - i * stackStep;
+		double stackAngle = OBN_PI * 0.5f - i * stackStep;
 		float xy = radius * cosf(stackAngle);
 		float z = radius * sinf(stackAngle);
 

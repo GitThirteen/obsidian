@@ -21,17 +21,27 @@ icon: "assets/icon.png" # doesn't do anything yet
 shards:
   - name: "main"
     target: "screen"
-    clear_color: [0.0, 0.0, 0.0, 1.0]
+    clear_color: [1.0, 0.0, 1.0, 1.0]
     attachments:
       - type: "color"
         load: "clear"
         store: "store"
-        layout: "present"
+        layout: "color"
       - type: "depth"
         load: "clear"
         store: "dont_care"
-    layers: ["default"]
+        layout: "depth"
+    #layers: ["default"]
     pipelines: ["base"]
+  - name: "shadow"
+    target: "texture"
+    clear_color: [1.0, 1.0, 1.0, 1.0]
+    attachments:
+      - type: "depth"
+        load: "clear"
+        store: "store"
+        layout: "depth_stencil_attachment"
+    pipelines: ["shadow_mapper"]
 
 # Define the order in which shards are rendered.
 # If not specified, shards will be rendered in the order they are defined.

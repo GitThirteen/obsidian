@@ -2,15 +2,9 @@
 
 #include <native/core/include.h>
 #include <native/core/root.h>
+#include <native/graphics/shard.h>
 #include <native/platform/window.obn.h>
-
-struct Shard
-{
-	avk::renderpass renderpass;
-	std::vector<avk::framebuffer> framebuffers;
-	std::vector<std::string> pipelines;
-	bool is_swapchain_target = false;
-};
+#include <native/utils/translate.h>
 
 class ResourceManager
 {
@@ -18,7 +12,7 @@ public:
 	ResourceManager(Root& root, WindowManager& window) : m_root(root), m_window(window) { }
 
 	auto initialize() -> void;
-	//auto recreate_swapchain() -> void;
+	//auto recreate_swapchain() -> void; // TODO
 	auto destroy() -> void;
 
 	auto next_image(uint32_t frame_index) -> std::pair<bool, uint32_t>;
@@ -31,6 +25,11 @@ public:
 	auto command_pool() -> avk::command_pool& { return m_command_pool; }
 	auto descriptor_pool() -> avk::descriptor_pool& { return m_descriptor_pool; }
 	auto frames_in_flight() -> const size_t { return m_in_flight_fences.size(); }
+
+	auto swapchain_image(uint32_t index) -> const avk::image& { return m_swapchain_images[index]; }
+	auto swapchain_view(uint32_t index) -> const avk::image_view& { return m_swapchain_views[index]; }
+	auto depth_image() -> const avk::image& { return m_depth_image; }
+	auto depth_view() -> const avk::image_view& { return m_depth_view; }
 
 private:
 	Root& m_root;
@@ -63,4 +62,6 @@ private:
 	auto create_pools() -> void;
 	auto create_shards() -> void;
 	auto create_depth_buffer() -> void;
+
+	auto is_depth_format(vk::Format format) -> bool;
 };

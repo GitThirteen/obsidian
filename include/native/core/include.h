@@ -32,6 +32,7 @@
 #include <concepts>
 #include <span>
 #include <thread>
+#include <variant>
 
 #include <external/avk/avk.hpp>
 
@@ -62,6 +63,7 @@
 	#include <external/yaml/ryml.hpp>
 	#include <external/glslang/SPIRV/GlslangToSpv.h>
 	#include <external/glslang/Public/ShaderLang.h>
+	#include <external/reflect/spirv_reflect.h>
 #pragma warning(pop)
 
 template<typename T>

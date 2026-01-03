@@ -22,7 +22,9 @@
     <ClCompile Include="include\external\glm\detail\glm.cpp" />
     <ClCompile Include="include\external\glm\glm.cppm" />
     <ClCompile Include="include\external\loguru\loguru.cpp" />
+    <ClCompile Include="src\external\spirv_reflect.c" />
     <ClCompile Include="src\graphics\descriptors.cpp" />
+    <ClCompile Include="src\graphics\shard.cpp" />
     <ClCompile Include="src\scene\camera.cpp" />
     <ClCompile Include="src\core\obsidian.cpp" />
     <ClCompile Include="src\scene\object.cpp" />
@@ -42,6 +44,7 @@
     <ClCompile Include="src\utils\io.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\spirv_reflect.h" />
     <ClInclude Include="include\external\avk\acceleration_structure_size_requirements.hpp" />
     <ClInclude Include="include\external\avk\attachment.hpp" />
     <ClInclude Include="include\external\avk\avk.hpp" />
@@ -417,8 +420,10 @@
     <ClInclude Include="include\external\glslang\SPIRV\Logger.h" />
     <ClInclude Include="include\external\glslang\SPIRV\SpvTools.h" />
     <ClInclude Include="include\external\loguru\loguru.hpp" />
+    <ClInclude Include="include\external\reflect\spirv_reflect.h" />
     <ClInclude Include="include\external\vma\vk_mem_alloc.h" />
     <ClInclude Include="include\external\yaml\ryml.hpp" />
+    <ClInclude Include="include\native\graphics\shard.h" />
     <ClInclude Include="include\native\scene\camera.h" />
     <ClInclude Include="include\native\scene\light.h" />
     <ClInclude Include="include\native\scene\object.h" />
@@ -440,6 +445,7 @@
     <ClInclude Include="include\native\core\timer.h" />
     <ClInclude Include="include\native\utils\templates.h" />
     <ClInclude Include="include\native\utils\io.h" />
+    <ClInclude Include="include\native\utils\translate.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitignore" />

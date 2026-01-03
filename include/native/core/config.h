@@ -14,7 +14,7 @@ struct ShardConfig
 
     std::string name;
     std::string target;
-    std::array<float, 4u> clear_color;
+    std::array<float, 4u> clear_color = { 0.0f, 0.0f, 0.0f, 0.0f };
     std::vector<Attachment> attachments;
     std::vector<std::string> pipelines;
 };
@@ -23,29 +23,44 @@ namespace c4
 {
     namespace yml
     {
-        void read(c4::yml::ConstNodeRef const& n, ShardConfig::Attachment* v)
+        inline bool read(c4::yml::ConstNodeRef const& n, ShardConfig::Attachment* v)
         {
-            n["type"] >> v->type;
-            n["load"] >> v->load;
-            n["store"] >> v->store;
+            if (!n.is_map()) return false;
 
-            if (n.has_child("layout"))
-            {
-                n["layout"] >> v->layout;
-            }
+            if (n.has_child("type")) n["type"] >> v->type;
+            if (n.has_child("load")) n["load"] >> v->load;
+            if (n.has_child("store")) n["store"] >> v->store;
+            if (n.has_child("layout")) n["layout"] >> v->layout;
+
+            return true;
         }
 
-        void read(c4::yml::ConstNodeRef const& n, ShardConfig* v)
+        inline bool read(c4::yml::ConstNodeRef const& n, ShardConfig* v)
         {
-            n["name"] >> v->name;
-            n["target"] >> v->target;
-            n["attachments"] >> v->attachments;
-            n["pipelines"] >> v->pipelines;
+            if (!n.is_map()) return false;
 
-            if (n.has_child("clear_color"))
+            if (n.has_child("name")) n["name"] >> v->name;
+            if (n.has_child("target")) n["target"] >> v->target;
+            if (n.has_child("attachments")) n["attachments"] >> v->attachments;
+            if (n.has_child("pipelines")) n["pipelines"] >> v->pipelines;
+            if (n.has_child("clear_color")) n["clear_color"] >> v->clear_color;
+
+            return true;
+        }
+
+        template <typename T, size_t N>
+        inline bool read(c4::yml::ConstNodeRef const& n, std::array<T, N>* out)
+        {
+            if (!n.is_seq()) return false;
+
+            size_t i = 0;
+            for (const auto& child : n.children())
             {
-                n["clear_color"] >> v->clear_color;
+                if (i >= N) break;
+                child >> (*out)[i];
+                ++i;
             }
+            return true;
         }
     }
 }

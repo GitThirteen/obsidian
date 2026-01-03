@@ -224,30 +224,11 @@ auto ResourceManager::create_shards() -> void
 	{
 		LOG_S(WARNING) << "No shards specified in config, using default instead.";
 
-		const avk::renderpass default_pass = m_root.create_renderpass({
-			avk::attachment::declare(
-				m_color_format,
-				avk::on_load::clear,
-				avk::usage::color(0),
-				avk::on_store::store.in_layout(avk::layout::present_src)
-			).set_clear_color({ 1.0f, 0.0f, 1.0f, 1.0f }),
-			avk::attachment::declare(
-				m_depth_format,
-				avk::on_load::clear,
-				avk::usage::depth_stencil,
-				avk::on_store::dont_care
-			).set_depth_clear_value(0.0f).set_stencil_clear_value(0)
-		});
-
 		Shard default_shard;
-		default_shard.renderpass = default_pass;
+		default_shard.attachments.push_back(ShardMetadata::default_color_attachment());
+		default_shard.depth_attachment = ShardMetadata::default_depth_attachment();
 		default_shard.pipelines.push_back("base");
 		default_shard.is_swapchain_target = true;
-
-		for (const auto& view : m_swapchain_views)
-		{
-			default_shard.framebuffers.push_back(m_root.create_framebuffer(default_pass, view, m_depth_view));
-		}
 
 		m_shards.insert({ "default", default_shard });
 		return;
@@ -258,78 +239,70 @@ auto ResourceManager::create_shards() -> void
 	for (const auto& shard_config : shard_configs)
 	{
 		Shard shard;
-
-		std::vector<avk::attachment> attachments;
-		for (const auto& attachment_config : shard_config.attachments)
-		{
-			// TODO: Abstract this mapping logic into its own module/function
-
-			vk::Format type 
-				= attachment_config.type == "color" ? m_color_format 
-				: attachment_config.type == "depth" ? m_depth_format 
-				: vk::Format::eUndefined;
-
-			avk::attachment_load_config load
-				= attachment_config.load == "clear" ? avk::on_load::clear
-				: attachment_config.load == "load" ? avk::on_load::load
-				: avk::on_load::dont_care;
-
-			avk::subpass_usages usage
-				= attachment_config.type == "color" ? avk::usage::color(0)
-				: attachment_config.type == "depth" ? avk::usage::depth_stencil
-				: avk::usage::unused;
-
-			avk::attachment_store_config store
-				= attachment_config.store == "store" ? avk::on_store::store
-				: avk::on_store::dont_care;
-
-			avk::layout::image_layout target_layout
-				= attachment_config.layout == "present" ? avk::layout::present_src
-				: attachment_config.layout == "color" ? avk::layout::color_attachment_optimal
-				: attachment_config.layout == "depth" ? avk::layout::depth_stencil_attachment_optimal
-				: attachment_config.layout == "texture" ? avk::layout::shader_read_only_optimal
-				: attachment_config.layout == "generic" ? avk::layout::general
-				: avk::layout::undefined;
-
-			avk::attachment attachment = avk::attachment::declare(
-				type,
-				load,
-				usage,
-				store.in_layout(target_layout)
-			);
-
-			if (attachment_config.type == "color")
-			{
-				attachment
-					.set_clear_color(shard_config.clear_color);
-			}
-			else if (attachment_config.type == "depth")
-			{
-				attachment
-					.set_depth_clear_value(0.0f)
-					.set_stencil_clear_value(0);
-			}
-
-			attachments.push_back(attachment);
-		}
-
-		shard.renderpass = m_root.create_renderpass(attachments);
 		shard.pipelines = shard_config.pipelines;
 		shard.is_swapchain_target = (shard_config.target == "screen");
-		
-		if (shard.is_swapchain_target)
+
+		// Parse metadata for each attachment
+		for (const auto& attachment_config : shard_config.attachments)
 		{
-			for (const auto& view : m_swapchain_views)
+			ShardMetadata metadata;
+			metadata.format = Translator::to<vk::Format>(attachment_config.type);
+			metadata.load_op = Translator::to<avk::attachment_load_config>(attachment_config.load);
+			metadata.store_op = Translator::to<avk::attachment_store_config>(attachment_config.store);
+			metadata.usage = Translator::to<avk::subpass_usages>(attachment_config.type);
+			metadata.layout = Translator::to<avk::layout::image_layout>(attachment_config.layout);
+			metadata.clear_color = shard_config.clear_color;
+
+			if (is_depth_format(metadata.format))
 			{
-				shard.framebuffers.push_back(m_root.create_framebuffer(shard.renderpass, view, m_depth_view));
+				shard.depth_attachment = metadata;
+			}
+			else
+			{
+				shard.attachments.push_back(metadata);
 			}
 		}
-		else
+
+		// If we're not writing to the screen, we must allocate the per-shard off-screen images + views
+		if (!shard.is_swapchain_target)
 		{
-			// TODO: Offscreen handling?
+			// TODO: We may need to potentially change the width and height if the config demands so
+			auto width = m_window.extent().width;
+			auto height = m_window.extent().height;
+
+			for (const auto& meta : shard.attachments)
+			{
+				auto image = m_root.create_image(width, height, meta.format, 1, avk::memory_usage::device, avk::image_usage::color_attachment | avk::image_usage::sampled);
+				auto view = m_root.create_image_view(image);
+				image.enable_shared_ownership();
+
+				shard.internal_images.push_back(std::move(image));
+				shard.internal_views.push_back(std::move(view));
+			}
+
+			if (shard.depth_attachment.format != vk::Format::eUndefined)
+			{
+				auto depth_image = m_root.create_image(width, height, shard.depth_attachment.format, 1, avk::memory_usage::device, avk::image_usage::depth_stencil_attachment | avk::image_usage::sampled);
+				auto depth_view = m_root.create_image_view(depth_image);
+
+				shard.internal_depth_image = std::move(depth_image);
+				shard.internal_depth_view = std::move(depth_view);
+			}
 		}
 
 		m_shards.insert({ shard_config.name, shard });
 		LOG_S(INFO) << "Successfully created shard: " << shard_config.name << ".";
 	}
+}
+
+auto ResourceManager::is_depth_format(vk::Format format) -> bool
+{
+	return
+		format == vk::Format::eD16Unorm ||
+		format == vk::Format::eX8D24UnormPack32 ||
+		format == vk::Format::eD32Sfloat ||
+		format == vk::Format::eS8Uint ||
+		format == vk::Format::eD16UnormS8Uint ||
+		format == vk::Format::eD24UnormS8Uint ||
+		format == vk::Format::eD32SfloatS8Uint;
 }
