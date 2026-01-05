@@ -508,6 +508,10 @@ void ShaderManager::build_graphics_pipeline(Pipeline& pipeline, const PipelineBl
 
 	config.mDynamicRenderingAttachments = std::move(dyn_attachments);
 
+	config.mInputBindingLocations.push_back(avk::from_buffer_binding(0)->stream_per_vertex(&Vertex::pos)->to_location(0));
+	config.mInputBindingLocations.push_back(avk::from_buffer_binding(0)->stream_per_vertex(&Vertex::normal)->to_location(1));
+	config.mInputBindingLocations.push_back(avk::from_buffer_binding(0)->stream_per_vertex(&Vertex::uv)->to_location(2));
+
 	pipeline.m_pipeline = this->m_root.create_graphics_pipeline(std::move(config)); // TODO IO-avoid: look at root::build_shader_module_from_binary_code...
 }
 

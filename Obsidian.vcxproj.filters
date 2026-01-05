@@ -63,9 +63,6 @@
     <ClCompile Include="src\scene\object.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\scene\primitives.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\scene\camera.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -82,6 +79,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\graphics\shard.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scene\assets.obn.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\external\tiny_obj_loader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\external\stb_image.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -336,9 +342,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\native\platform\input.obn.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\native\scene\primitives.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\native\core\timer.h">
@@ -1280,9 +1283,6 @@
     <ClInclude Include="include\native\graphics\descriptors.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\spirv_reflect.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\external\reflect\spirv_reflect.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -1290,6 +1290,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\native\utils\translate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\native\scene\assets.obn.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\external\tinyobjloader\tiny_obj_loader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\external\stbimage\stb_image.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -1718,6 +1727,9 @@
     <None Include="include\external\glm\gtx\wrap.inl">
       <Filter>Header Files</Filter>
     </None>
+    <None Include="resources\scenes\example.yaml" />
+    <None Include="resources\shaders\active\base\base.frag" />
+    <None Include="resources\shaders\active\base\base.vert" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="include\external\glfw\glfw3.lib" />

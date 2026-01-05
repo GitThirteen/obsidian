@@ -1,29 +1,32 @@
 #version 460
 #extension GL_EXT_scalar_block_layout : require
 
-struct Vertex { 
-    vec3 pos;
-    vec3 normal;
-    vec2 uv;
-};
+layout(location = 0) in vec3 inPos;
+layout(location = 1) in vec3 inNormal;
+layout(location = 2) in vec2 inUV;
 
-layout(scalar, set = 0, binding = 0) readonly buffer VertexBuffer {
-    Vertex vertices[];
+layout(location = 0) out vec2 vUV;
+layout(location = 1) out vec3 vNormal;
+layout(location = 2) out vec3 vWorldPos;
+
+layout(binding = 0) uniform CameraData {
+    mat4 viewProj;
+    vec4 globalCameraPos;
 };
 
 layout(push_constant) uniform PushConstants {
-    mat4 viewProj;
     mat4 model;
-} pc;
+    vec4 localCameraPos;
+} u_pc;
 
-layout(location = 0) out vec3 outNormal;
-layout(location = 1) out vec2 outUV;
-
-void main()
+void main() 
 {
-    Vertex v = vertices[gl_VertexIndex];
-    gl_Position = pc.viewProj * pc.model * vec4(v.pos, 1.0);
+    vec4 worldPos = u_pc.model * vec4(inPos, 1.0);
+    vWorldPos = worldPos.xyz;
 
-    outNormal = v.normal;
-    outUV = v.uv;
+    vUV = inUV;
+
+    vNormal = normalize(mat3(transpose(inverse(u_pc.model))) * inNormal);
+
+    gl_Position = viewProj * worldPos;
 }

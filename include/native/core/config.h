@@ -19,6 +19,57 @@ struct ShardConfig
     std::vector<std::string> pipelines;
 };
 
+struct MaterialConfig
+{
+    struct Textures
+    {
+        std::string albedo;
+        std::string roughness;
+        std::string normal;
+        std::string ao;
+    };
+
+    std::string name;
+    std::array<float, 4> base_color = { 1.0f, 1.0f, 1.0f, 1.0f };
+    float metallic = 0.0f;
+    float roughness = 1.0f;
+    Textures textures;
+};
+
+struct SceneElementConfig
+{
+    struct Data
+    {
+        // --- Common / Transform ---
+        std::array<float, 3> position = { 0.0f, 0.0f, 0.0f };
+        std::array<float, 3> rotate = { 0.0f, 0.0f, 0.0f };
+        std::array<float, 3> scale = { 1.0f, 1.0f, 1.0f };
+
+        // --- Mesh / Object ---
+        std::string file;
+        std::string material;
+
+        // --- Volume ---
+        size_t skip_bytes = 0;
+        std::array<int, 3> dimensions = { 0, 0, 0 };
+        std::string voxel_type; // "uint8", "uint16", etc.
+
+        // --- Camera ---
+        std::array<float, 3> target = { 0.0f, 0.0f, 0.0f };
+    };
+
+    std::string name;
+    std::string type;
+    std::vector<std::string> pipelines;
+    Data data;
+};
+
+struct SceneConfig
+{
+    std::vector<SceneElementConfig> elements;
+    std::vector<MaterialConfig> materials;
+};
+
 namespace c4
 {
     namespace yml
@@ -49,7 +100,7 @@ namespace c4
         }
 
         template <typename T, size_t N>
-        inline bool read(c4::yml::ConstNodeRef const& n, std::array<T, N>* out)
+        inline bool read(c4::yml::ConstNodeRef const& n, std::array<T, N>* v)
         {
             if (!n.is_seq()) return false;
 
@@ -57,9 +108,81 @@ namespace c4
             for (const auto& child : n.children())
             {
                 if (i >= N) break;
-                child >> (*out)[i];
+                child >> (*v)[i];
                 ++i;
             }
+
+            return true;
+        }
+
+        inline bool read(c4::yml::ConstNodeRef const& n, MaterialConfig::Textures* v)
+        {
+            if (!n.is_map()) return false;
+
+            if (n.has_child("albedo"))    n["albedo"] >> v->albedo;
+            if (n.has_child("roughness")) n["roughness"] >> v->roughness;
+            if (n.has_child("normal"))    n["normal"] >> v->normal;
+            if (n.has_child("ao"))        n["ao"] >> v->ao;
+
+            return true;
+        }
+
+        inline bool read(c4::yml::ConstNodeRef const& n, MaterialConfig* v)
+        {
+            if (!n.is_map()) return false;
+
+            if (n.has_child("name"))       n["name"] >> v->name;
+            if (n.has_child("base_color")) n["base_color"] >> v->base_color;
+            if (n.has_child("metallic"))   n["metallic"] >> v->metallic;
+            if (n.has_child("roughness"))  n["roughness"] >> v->roughness;
+            if (n.has_child("textures"))   n["textures"] >> v->textures;
+
+            return true;
+        }
+
+        inline bool read(c4::yml::ConstNodeRef const& n, SceneElementConfig::Data* v)
+        {
+            if (!n.is_map()) return false;
+
+            // Common
+            if (n.has_child("file"))     n["file"] >> v->file;
+            if (n.has_child("position")) n["position"] >> v->position;
+            if (n.has_child("rotate"))   n["rotate"] >> v->rotate;
+            if (n.has_child("scale"))    n["scale"] >> v->scale;
+
+            // Object Specific
+            if (n.has_child("material")) n["material"] >> v->material;
+
+            // Volume Specific
+            if (n.has_child("skip_bytes")) n["skip_bytes"] >> v->skip_bytes;
+            if (n.has_child("dimensions")) n["dimensions"] >> v->dimensions;
+            if (n.has_child("voxel_type")) n["voxel_type"] >> v->voxel_type;
+
+            // Camera Specific
+            if (n.has_child("target")) n["target"] >> v->target;
+
+            return true;
+        }
+
+        inline bool read(c4::yml::ConstNodeRef const& n, SceneElementConfig* v)
+        {
+            if (!n.is_map()) return false;
+
+            if (n.has_child("name"))        n["name"] >> v->name;
+            if (n.has_child("type"))        n["type"] >> v->type;
+            if (n.has_child("pipelines"))   n["pipelines"] >> v->pipelines;
+            if (n.has_child("data"))        n["data"] >> v->data;
+
+            return true;
+        }
+
+        inline bool read(c4::yml::ConstNodeRef const& n, SceneConfig* v)
+        {
+            if (!n.is_map()) return false;
+
+            if (n.has_child("materials")) n["materials"] >> v->materials;
+            if (n.has_child("elements"))  n["elements"] >> v->elements;
+
             return true;
         }
     }

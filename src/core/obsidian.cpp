@@ -6,6 +6,8 @@ auto Obsidian::flow() -> void
     const int fps = Config::get<int>("fps");
 	m_timer = FrameTimer(fps);
 
+    m_camera_buffer = root.create_buffer(avk::memory_usage::host_visible, vk::BufferUsageFlagBits::eUniformBuffer, avk::generic_buffer_meta::create_from_data(CameraData{}));
+
     while (!window.should_close())
     {
         m_timer.tick();
@@ -27,10 +29,12 @@ auto Obsidian::flow() -> void
 
         auto& cb = frame.current_command_buffer();
         auto cl = command_list(scene, shard_order);
+        // TODO: optimize
+        // TODO: pre-warm pipelines once before rendering starts, don't create them on the fly here
         root.record(cl).into_command_buffer(cb);
 
         this->frame.submit();
-        this->m_timer.cap_fps();
+        this->m_timer.cap_fps(); // TODO: fix accuracy
     }
 
 	this->root.device().waitIdle();
@@ -160,18 +164,33 @@ auto Obsidian::command_list(Scene& scene, const std::vector<std::string>& shard_
                         throw std::runtime_error("How did you get here?");
                     }
 
+                    CameraData currentData;
+                    currentData.view_proj = scene.active_camera().get_view_projection();
+                    currentData.pos = glm::vec4(scene.active_camera().position(), 1.0f);
+
+                    m_camera_buffer->fill(&currentData, 0);
+
+                    // TODO: batch drawing calls!!!
                     for (const auto& object : scene.objects())
                     {
-                        if (!object->has_descriptor_set()) {
-                            object->create_descriptor_set(resources.descriptor_pool(), pipeline, root);
+                        if (std::find(object->pipelines().begin(), object->pipelines().end(), pipeline_name) == object->pipelines().end())
+                        {
+                            continue;
                         }
 
+                        if (!object->has_descriptor_set()) {
+                            object->create_descriptor_set(root, resources.descriptor_pool(), pipeline, m_camera_buffer);
+                        }
+
+                        glm::mat4 inv_model = glm::inverse(object->model_matrix());
+                        glm::vec4 local_cam_pos = inv_model * glm::vec4(scene.active_camera().position(), 1.0f);
+                        local_cam_pos += 0.5f;
+
+                        struct PushData { glm::mat4 model; glm::vec4 local_cam_pos; };
+                        PushData pc_data = { object->model_matrix(), local_cam_pos };
+                        command_buffer.handle().pushConstants(pipeline.layout_handle(), blueprint.push_constant_stages, 0, sizeof(PushData), &pc_data);
+
                         command_buffer.handle().bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeline.layout_handle(), 0, 1, &object->descriptor_set(), 0, nullptr);
-
-                        struct PushData { glm::mat4 vp; glm::mat4 m; };
-                        PushData pcData{ scene.active_camera().get_view_projection(), object->model_matrix() };
-
-                        command_buffer.handle().pushConstants(pipeline.layout_handle(), blueprint.push_constant_stages, 0, sizeof(PushData), &pcData);
 
                         if (object->index_count() > 0)
                         {

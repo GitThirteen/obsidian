@@ -209,7 +209,8 @@ auto ResourceManager::create_pools() -> void
 
 	std::vector<vk::DescriptorPoolSize> sizes = {
 		{ vk::DescriptorType::eStorageBuffer, 1024 },
-		{ vk::DescriptorType::eUniformBuffer, 1024 }
+		{ vk::DescriptorType::eUniformBuffer, 1024 },
+		{ vk::DescriptorType::eCombinedImageSampler, 1024 }
 	};
 
 	m_descriptor_pool = m_root.create_descriptor_pool(sizes, 1024);

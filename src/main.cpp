@@ -1,22 +1,21 @@
 #include <native/core/obsidian.h>
-#include <native/scene/primitives.h>
 
-/* !==== BASE TODO ====! */
-// [ ] Simplify & abstract main render loop
-// [ ] Implement materials (each material may have one texture, and each object may have one material)
-// [ ] Implement lighting
-// [ ] Implement Blinn-Phong
-// [ ] Load geometry (.obj files at the very least) from a file path into the renderer using tinyobjloader
-// [ ] Automatically create scenes by loading objects from scene descriptions into renderer
+/* !==== Neverending List of ToDo's ====! */
+// [ ] Implement lighting (Ambient, Directional, Point, for now..)
 // ===============================================================
-// [ ] 4x MSAA
+// [ ] 2x/4x MSAA / TAA & more...
 // [ ] Avoid write when compiling from GLSL to SPIR-V
-// [ ] Properly destroy objects, resources, etc. on shutdown
 // [ ] Add audio support
 // [ ] Add a simple GUI
+// [ ] LoD data structure
+// [ ] Ray tracing intersection data structure (Octree, maybe later BVH?)
 // [ ] Fix swapchain recreation on window resize
 // [ ] Fix FPS capping accuracy
-/* !===================! */
+// [ ] Swap all AVK calls with regular VK calls (AVK too inconsistent)
+// [ ] Refactor like, idk, half the renderer
+// [ ] Physics? (Colliders, Actors, Gravity, ...)
+// [ ] Raytracing!! Path Tracing? (Path Guiding...?)
+/* !====================================! */
 
 int main(int c, char* v[])
 {
@@ -36,48 +35,16 @@ int main(int c, char* v[])
 		LOG_S(INFO) << "Initializing shaders.";
 		obsidian.shaders.load("./resources/shaders/active/", "./resources/shaders/compiled/");
 
-		// TODO: load this automatically from scene description
 		LOG_S(INFO) << "Initializing scenes.";
-		obsidian.scenes.create_scene("Testing",
-			[](Scene& s, Root& root, WindowManager& window) {
-				auto floor = Primitives::generate(root, GeometricPrimitiveType::Plane);
-				floor->set_position({ 0.0f, -1.0f, 0.0f });
-				floor->scale({ 10.0f, 1.0f, 10.0f });
-				s.add_object(floor);
-
-				auto cube = Primitives::generate(root, GeometricPrimitiveType::Cube);
-				cube->set_position({ -1.5f, 0.0f, 0.0f });
-				s.add_object(cube);
-
-				auto sphere = Primitives::generate(root, GeometricPrimitiveType::Sphere);
-				sphere->set_position({ 1.5f, 0.0f, 0.0f });
-				s.add_object(sphere);
-
-				auto camera = std::make_shared<UserCamera>(glm::vec3(0.0f, 1.0f, 5.0f), window.glfw_window());
-				s.add_camera(camera);
-
-				auto camera2 = std::make_shared<StaticCamera>(glm::vec3(0.0f, 1.0f, 5.0f), glm::vec3(0.0f, 0.0f, 0.0f));
-				s.add_camera(camera2);
-			},
-			[](Scene& s, double dt) {
-				if (auto* cube = s.find_object("Cube1")) {
-					cube->rotate(30.0f * (float)dt, { 0, 1, 0 });
-				}
-				if (auto* sphere = s.find_object("Sphere1")) {
-					static float time = 0.0f;
-					time += (float)dt;
-					sphere->set_position({ 1.5f, sin(time) * 0.5f, 0.0f });
-				}
-			}
-		);
-
-		obsidian.scenes.switch_to("Testing");
+		obsidian.scenes.load("./resources/scenes/");
 
 		LOG_S(INFO) << "Starting render loop.";
 		obsidian.flow();
 
 		LOG_S(INFO) << "Destroying renderer.";
 		obsidian.shatter();
+
+		return EXIT_SUCCESS;
 	}
 	catch (const std::exception& e)
 	{

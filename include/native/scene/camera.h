@@ -43,6 +43,7 @@ public:
 	void set_position(glm::vec3 pos);
 	void look_at(glm::vec3 target);
 	void set_aspect_ratio(float width, float height);
+	auto position() const -> const glm::vec3 { return m_cam_vectors.position; }
 
 protected:
 	CameraType m_type;

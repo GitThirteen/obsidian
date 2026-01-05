@@ -50,8 +50,8 @@ inline auto Translator::translate<avk::on_load_behavior, vk::AttachmentLoadOp>(a
 template <>
 inline auto Translator::translate<std::string, vk::Format>(std::string format) -> vk::Format
 {
-    if (format == "color") return vk::Format::eR8G8B8A8Unorm; // Or OBN_DEFAULT_COLOR_FORMAT
-    if (format == "depth") return vk::Format::eD32Sfloat;     // Or OBN_DEFAULT_DEPTH_FORMAT
+    if (format == "color") return OBN_DEFAULT_COLOR_FORMAT; // vk::Format::eR8G8B8A8Unorm
+    if (format == "depth") return OBN_DEFAULT_DEPTH_FORMAT; // vk::Format::eD32Sfloat
     return vk::Format::eUndefined;
 }
 
@@ -84,7 +84,7 @@ inline auto Translator::translate<std::string, avk::layout::image_layout>(std::s
     return avk::layout::undefined;
 }
 
-// 5. String -> avk::subpass_usages (or avk::image_usage depending on version)
+// 5. String -> avk::subpass_usages
 template <>
 inline auto Translator::translate<std::string, avk::subpass_usages>(std::string usage) -> avk::subpass_usages
 {

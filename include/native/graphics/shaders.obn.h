@@ -4,8 +4,27 @@
 #include <native/core/root.h>
 #include <native/graphics/compiler.h>
 #include <native/graphics/resources.obn.h>
+#include <native/scene/assets.obn.h>
 #include <native/utils/templates.h>
 #include <native/utils/io.h>
+
+namespace avk
+{
+	template<> inline vk::Format format_for<glm::vec2>()
+	{
+		return vk::Format::eR32G32Sfloat;
+	}
+
+	template<> inline vk::Format format_for<glm::vec3>()
+	{
+		return vk::Format::eR32G32B32Sfloat;
+	}
+
+	template<> inline vk::Format format_for<glm::vec4>()
+	{
+		return vk::Format::eR32G32B32A32Sfloat;
+	}
+}
 
 /**
  * @brief Describes the type of shader to be used in a pipeline.

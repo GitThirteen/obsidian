@@ -1,0 +1,84 @@
+# This is an example scene configuration file for the rendering engine.
+
+# The general structure of a material is as follows:
+# - name: Unique identifier for the material
+# - base_color: RGBA color of the material
+# - metallic: Metallic property of the material (0.0 - 1.0)
+# - roughness: Roughness property of the material (0.0 - 1.0)
+# - [OPTIONAL] textures: Texture maps for the material
+#   - [OPTIONAL] albedo: Path to your albedo texture map
+#   - [OPTIONAL] roughness: Path to your roughness texture map
+#   - [OPTIONAL] normal: Path to your normal texture map
+#   - [OPTIONAL] ao: Path to your ambient occlusion texture map
+
+materials:
+  - name: "solid_red"
+    base_color: [1.0, 0.0, 0.0, 1.0]
+    metallic: 0.0
+    roughness: 1.0
+
+# The general structure of a scene element is as follows:
+# - name: Unique identifier for the element
+# - type: Type of the element (e.g., terrain, object, volume, light, user_camera, static_camera, ...)
+# - pipelines: List of rendering pipelines to be used for this element
+# - data: Specific data for the element, which varies based on its type
+#     [For terrain and object]
+#   - file: Path to the mesh file
+#   - material: Material to be applied to the mesh  
+#   - position: Position of the element in the scene
+#   - [OPTIONAL] rotate: Rotation of the element in the scene
+#   - [OPTIONAL] scale: Scale of the element in the scene
+#
+#     [For volume]
+#   - file: Path to the volume data file
+#   - skip_bytes: Number of bytes to skip at the beginning of the file (e.g., header information)
+#   - dimensions: Dimensions of the volume data [width, height, depth]
+#   - voxel_size: typeof [uint8, uint12, uint16, float32]
+#   - [OPTIONAL] position: Position of the element in the scene
+#   - [OPTIONAL] rotate: Rotation of the element in the scene
+#   - [OPTIONAL] scale: Scale of the element in the scene
+  
+elements:
+  - name: "Ground"
+    type: "terrain" # right now, we do not differentiate between terrain and objects, but in the future, terrain may have different LOD or tesselation techniques
+    pipelines: ["base"]
+    data:
+      file: "OBSIDIAN_PLANE"
+      material: "solid_red"
+      position: [0.0, -1.0, 0.0]
+      scale: [10.0, 1.0, 10.0]
+  - name: "Cube"
+    type: "object"
+    pipelines: ["base"]
+    data:
+      file: "OBSIDIAN_CUBE"
+      material: "solid_red"
+      position: [-1.5, 0.0, 0.0]
+  - name: "Sphere"
+    type: "object"
+    pipelines: ["base"]
+    data:
+      file: "OBSIDIAN_SPHERE"
+      material: "solid_red"
+      position: [1.5, 0.0, 0.0]
+  - name: "Teapot"
+    type: "object"
+    pipelines: ["base"]
+    data:
+      file: "./resources/meshes/teapot.obj"
+      material: "solid_red"
+      position: [0.0, 0.0, -2.0]
+      rotate: [0.0, 45.0, 0.0]
+  - name: "Camera1"
+    type: "user_camera"
+    pipelines: ["base"]
+    data:
+      position: [0.0, 1.0, 5.0]
+  - name: "Camera2"
+    type: "static_camera"
+    pipelines: ["base"]
+    data:
+      position: [0.0, 1.0, 5.0]
+      target: [0.0, 0.0, 0.0]
+
+# TODO: animations

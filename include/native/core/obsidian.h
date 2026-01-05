@@ -7,6 +7,7 @@
 #include <native/graphics/frame.obn.h>
 #include <native/platform/window.obn.h>
 #include <native/platform/input.obn.h>
+#include <native/scene/assets.obn.h>
 #include <native/scene/scene.obn.h>
 
 #include <native/core/timer.h>
@@ -18,6 +19,7 @@ public:
     Root root;
 
     WindowManager window;
+    AssetManager assets;
     SceneManager scenes;
     ResourceManager resources;
     ShaderManager shaders;
@@ -26,7 +28,8 @@ public:
 
     Obsidian() : 
         window(root),
-        scenes(root, window),
+        assets(root),
+        scenes(root, window, assets),
         resources(root, window),
         shaders(root),
         events(window),
@@ -44,6 +47,7 @@ public:
 
 private:
     FrameTimer m_timer;
+    avk::buffer m_camera_buffer;
 
     auto command_list(Scene& scene, const std::vector<std::string>& shard_order) -> std::vector<avk::recorded_commands_t>;
 };

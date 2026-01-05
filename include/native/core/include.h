@@ -40,6 +40,8 @@
 #include <external/glfw/glfw3.h>
 #include <external/glm/glm.hpp>
 #include <external/glm/gtc/matrix_transform.hpp>
+#include <external/stbimage/stb_image.h>
+#include <external/tinyobjloader/tiny_obj_loader.h>
 
 #ifdef _WIN32
 	// GLFW and windows stuff

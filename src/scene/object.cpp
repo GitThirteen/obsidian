@@ -1,51 +1,88 @@
 #include <native/scene/object.h>
 
-SceneObject::SceneObject(Root& root, GeometryData data, std::string name) : m_geometry(std::move(data)), m_name(std::move(name))
-{
-    m_vertex_buffer = root.create_buffer(
-        avk::memory_usage::host_visible,
-        vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst,
-        avk::vertex_buffer_meta::create_from_data(m_geometry.vertices)
-    );
-    m_vertex_buffer->fill(m_geometry.vertices.data(), 0);
-
-    m_index_buffer = root.create_buffer(
-        avk::memory_usage::host_visible,
-        vk::BufferUsageFlagBits::eIndexBuffer | vk::BufferUsageFlagBits::eTransferDst,
-        avk::index_buffer_meta::create_from_data(m_geometry.indices)
-    );
-    m_index_buffer->fill(m_geometry.indices.data(), 0);
-}
-
-auto SceneObject::create_descriptor_set(avk::descriptor_pool& pool, const Pipeline& pipeline, Root& root) -> void
+auto SceneObject::create_descriptor_set(Root& root, avk::descriptor_pool& pool, const Pipeline& pipeline, const avk::buffer& cam_data) -> void
 {
     if (has_descriptor_set()) return;
 
 	m_descriptor_set = pipeline.make_descriptor_set(pool);
-    ShaderDescriptor::write_storage_buffer(root.device(), m_descriptor_set, 0, m_vertex_buffer);
+
+    auto bind_texture = [&](int binding, std::shared_ptr<TextureAsset> tex) {
+        if (!tex) return;
+        ShaderDescriptor::write_combined_image_sampler(root.device(), m_descriptor_set, binding, tex->handle->get_image_view(), tex->handle->get_sampler());
+    };
+
+    avk::image_sampler* texture_handle = 
+        (m_material->is_volume()) ? &m_material->volume_map->handle 
+        : (m_material->albedo_map) ? &m_material->albedo_map->handle 
+        : nullptr;
+
+    ShaderDescriptor::write_uniform_buffer(root.device(), m_descriptor_set, 0, cam_data);
+
+    if (m_material->is_volume())
+    {
+        bind_texture(1, m_material->volume_map);
+    }
+    else
+    {
+        bind_texture(1, m_material->albedo_map);
+        bind_texture(2, m_material->roughness_map);
+        bind_texture(3, m_material->normal_map);
+        bind_texture(4, m_material->ao_map);
+
+        if (m_material->ubo.has_value())
+        {
+            ShaderDescriptor::write_uniform_buffer(root.device(), m_descriptor_set, 5, m_material->ubo);
+        }
+    }
 }
 
 auto SceneObject::set_position(const glm::vec3& pos) -> void
 {
-    m_model_matrix[3][0] = pos.x;
-    m_model_matrix[3][1] = pos.y;
-    m_model_matrix[3][2] = pos.z;
+    m_position = pos;
+    update_model_matrix();
 }
 
 auto SceneObject::translate(const glm::vec3& offset) -> void
 {
-    glm::mat4 t = glm::translate(glm::mat4(1.0f), offset);
-    m_model_matrix = m_model_matrix * t;
+    m_position += offset;
+    update_model_matrix();
+}
+
+auto SceneObject::set_rotation(const glm::vec3& euler_angles) -> void
+{
+    m_rotation = euler_angles;
+    update_model_matrix();
+}
+
+auto SceneObject::rotate(const glm::vec3& delta_euler_angles) -> void
+{
+    m_rotation += delta_euler_angles;
+    update_model_matrix();
+}
+
+auto SceneObject::set_scale(const glm::vec3& factor) -> void
+{
+    m_scale = factor;
+    update_model_matrix();
 }
 
 auto SceneObject::scale(const glm::vec3& factor) -> void
 {
-    glm::mat4 s = glm::scale(glm::mat4(1.0f), factor);
-    m_model_matrix = m_model_matrix * s;
+    m_scale *= factor;
+    update_model_matrix();
 }
 
-auto SceneObject::rotate(float angleDeg, const glm::vec3& axis) -> void
+auto SceneObject::update_model_matrix() -> void
 {
-    glm::mat4 r = glm::rotate(glm::mat4(1.0f), glm::radians(angleDeg), axis);
-    m_model_matrix = m_model_matrix * r;
+    glm::mat4 mat(1.0f);
+
+    mat = glm::translate(mat, m_position);
+
+    mat = glm::rotate(mat, glm::radians(m_rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+    mat = glm::rotate(mat, glm::radians(m_rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+    mat = glm::rotate(mat, glm::radians(m_rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
+
+    mat = glm::scale(mat, m_scale);
+
+    m_model_matrix = mat;
 }

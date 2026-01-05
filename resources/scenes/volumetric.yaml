@@ -1,0 +1,31 @@
+materials:
+  - name: "solid_gray"
+    base_color: [0.4, 0.4, 0.4, 1.0]
+    metallic: 0.0
+    roughness: 1.0
+
+elements:
+  - name: "Ground"
+    type: "terrain"
+    pipelines: ["base"]
+    data:
+      file: "OBSIDIAN_PLANE"
+      material: "solid_gray"
+      position: [0.0, -2.0, 0.0]
+      scale: [10.0, 1.0, 10.0]
+
+  - name: "Stagbeetle"
+    type: "volume"
+    pipelines: ["volumetric"]
+    data:
+      file: "resources/volumes/stagbeetle832x832x494.dat"
+      skip_bytes: 6
+      dimensions: [832, 832, 494]
+      voxel_type: "uint12"
+      rotate: [90.0, 0.0, 0.0]
+      scale: [8.32, 8.32, 4.94]
+
+  - name: "Camera"
+    type: "user_camera"
+    data:
+      position: [0.0, 1.0, 5.0]

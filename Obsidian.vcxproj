@@ -23,8 +23,11 @@
     <ClCompile Include="include\external\glm\glm.cppm" />
     <ClCompile Include="include\external\loguru\loguru.cpp" />
     <ClCompile Include="src\external\spirv_reflect.c" />
+    <ClCompile Include="src\external\stb_image.cpp" />
+    <ClCompile Include="src\external\tiny_obj_loader.cpp" />
     <ClCompile Include="src\graphics\descriptors.cpp" />
     <ClCompile Include="src\graphics\shard.cpp" />
+    <ClCompile Include="src\scene\assets.obn.cpp" />
     <ClCompile Include="src\scene\camera.cpp" />
     <ClCompile Include="src\core\obsidian.cpp" />
     <ClCompile Include="src\scene\object.cpp" />
@@ -39,12 +42,10 @@
     <ClCompile Include="src\graphics\shaders.obn.cpp" />
     <ClCompile Include="src\platform\window.obn.cpp" />
     <ClCompile Include="src\graphics\compiler.cpp" />
-    <ClCompile Include="src\scene\primitives.cpp" />
     <ClCompile Include="src\core\timer.cpp" />
     <ClCompile Include="src\utils\io.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\spirv_reflect.h" />
     <ClInclude Include="include\external\avk\acceleration_structure_size_requirements.hpp" />
     <ClInclude Include="include\external\avk\attachment.hpp" />
     <ClInclude Include="include\external\avk\avk.hpp" />
@@ -421,8 +422,11 @@
     <ClInclude Include="include\external\glslang\SPIRV\SpvTools.h" />
     <ClInclude Include="include\external\loguru\loguru.hpp" />
     <ClInclude Include="include\external\reflect\spirv_reflect.h" />
+    <ClInclude Include="include\external\stbimage\stb_image.h" />
+    <ClInclude Include="include\external\tinyobjloader\tiny_obj_loader.h" />
     <ClInclude Include="include\external\vma\vk_mem_alloc.h" />
     <ClInclude Include="include\external\yaml\ryml.hpp" />
+    <ClInclude Include="include\native\scene\assets.obn.h" />
     <ClInclude Include="include\native\graphics\shard.h" />
     <ClInclude Include="include\native\scene\camera.h" />
     <ClInclude Include="include\native\scene\light.h" />
@@ -441,7 +445,6 @@
     <ClInclude Include="include\native\core\include.h" />
     <ClInclude Include="include\native\graphics\descriptors.h" />
     <ClInclude Include="include\native\graphics\compiler.h" />
-    <ClInclude Include="include\native\scene\primitives.h" />
     <ClInclude Include="include\native\core\timer.h" />
     <ClInclude Include="include\native\utils\templates.h" />
     <ClInclude Include="include\native\utils\io.h" />
@@ -592,6 +595,9 @@
     <None Include="include\external\glm\gtx\vector_query.inl" />
     <None Include="include\external\glm\gtx\wrap.inl" />
     <None Include="LICENSE" />
+    <None Include="resources\scenes\example.yaml" />
+    <None Include="resources\shaders\active\base\base.frag" />
+    <None Include="resources\shaders\active\base\base.vert" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="include\external\glfw\glfw3.lib" />
