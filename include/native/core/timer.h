@@ -15,7 +15,7 @@ public:
 	}
 
 	void tick();
-	void cap_fps();
+	void cap_fps() const;
 	double fps() const;
 	double dt() const;
 

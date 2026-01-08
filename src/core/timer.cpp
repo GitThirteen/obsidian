@@ -8,16 +8,20 @@ void FrameTimer::tick()
 	this->m_last_time = curr_time;
 }
 
-void FrameTimer::cap_fps()
+void FrameTimer::cap_fps() const
 {
-	auto curr_time = Clock::now();
-	std::chrono::duration<double> elapsed = curr_time - this->m_last_time;
+    auto target_wake_time = this->m_last_time + std::chrono::duration<double>(this->m_target_duration);
+    constexpr auto sleep_margin = std::chrono::duration<double>(0.002); // We need this to wake up slightly earlier than the target time to be precise.
 
-	if (elapsed.count() < this->m_target_duration)
-	{
-		std::chrono::duration<double> remaining(this->m_target_duration - elapsed.count());
-		std::this_thread::sleep_for(remaining);
-	}
+    if (Clock::now() < (target_wake_time - sleep_margin))
+    {
+        std::this_thread::sleep_until(target_wake_time - sleep_margin);
+    }
+
+    while (Clock::now() < target_wake_time)
+    {
+        std::this_thread::yield();
+    }
 }
 
 double FrameTimer::fps() const
