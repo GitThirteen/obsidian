@@ -3,8 +3,10 @@
 #include <native/core/include.h>
 #include <native/core/root.h>
 #include <native/graphics/shard.h>
-#include <native/platform/window.obn.h>
 #include <native/utils/translate.h>
+
+class WindowManager;
+class Root;
 
 class ResourceManager
 {

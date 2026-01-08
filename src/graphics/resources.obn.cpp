@@ -1,4 +1,5 @@
 #include <native/graphics/resources.obn.h>
+#include <native/platform/window.obn.h>
 
 auto ResourceManager::initialize() -> void
 {

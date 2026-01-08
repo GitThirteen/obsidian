@@ -7,12 +7,6 @@
 	#define AVK_USE_VMA
 #endif
 
-#ifdef _WIN32
-	#define NOMINMAX
-	#define WIN32_LEAN_AND_MEAN
-	#include <Windows.h>
-#endif
-
 #include <iostream>
 #include <sstream>
 #include <fstream>
@@ -36,14 +30,11 @@
 
 #include <external/avk/avk.hpp>
 
-#define GLFW_INCLUDE_NONE
-#include <external/glfw/glfw3.h>
-#include <external/glm/glm.hpp>
-#include <external/glm/gtc/matrix_transform.hpp>
-#include <external/stbimage/stb_image.h>
-#include <external/tinyobjloader/tiny_obj_loader.h>
-
 #ifdef _WIN32
+	#define NOMINMAX
+	#define WIN32_LEAN_AND_MEAN
+	#include <Windows.h>
+
 	// GLFW and windows stuff
 	#pragma comment(lib, "include/external/glfw/glfw3.lib")
 	#pragma comment(lib, "gdi32.lib")
@@ -60,12 +51,24 @@
 	#pragma comment(lib, "GenericCodeGen.lib")
 #endif
 
+#define GLFW_INCLUDE_NONE
+#define GLFW_INCLUDE_VULKAN
+#include <external/glfw/glfw3.h>
+#include <external/glfw/glfw3native.h>
+#include <external/glm/glm.hpp>
+#include <external/glm/gtc/matrix_transform.hpp>
+
 #pragma warning(push, 0)
 	#include <native/core/log.h>
 	#include <external/yaml/ryml.hpp>
 	#include <external/glslang/SPIRV/GlslangToSpv.h>
 	#include <external/glslang/Public/ShaderLang.h>
 	#include <external/reflect/spirv_reflect.h>
+	#include <external/stbimage/stb_image.h>
+	#include <external/tinyobjloader/tiny_obj_loader.h>
+	#include <external/imgui/imgui.h>
+	#include <external/imgui/imgui_impl_glfw.h>
+	#include <external/imgui/imgui_impl_vulkan.h>
 #pragma warning(pop)
 
 template<typename T>

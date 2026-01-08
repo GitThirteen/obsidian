@@ -40,6 +40,8 @@ auto WindowManager::destroy() -> void
         m_root.instance().destroySurfaceKHR(m_surface);
     }
 
+    ui.destroy();
+
     if (m_window)
     {
         glfwDestroyWindow(m_window);

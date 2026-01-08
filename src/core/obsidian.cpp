@@ -5,6 +5,7 @@ auto Obsidian::flow() -> void
     const auto& shard_order = Config::get<std::vector<std::string>>("order");
     const int fps = Config::get<int>("fps");
 	m_timer = FrameTimer(fps);
+    window.ui.initialize(root, window.glfw_window(), resources);
 
     m_camera_buffer = root.create_buffer(avk::memory_usage::host_visible, vk::BufferUsageFlagBits::eUniformBuffer, avk::generic_buffer_meta::create_from_data(CameraData{}));
 
@@ -106,6 +107,8 @@ auto Obsidian::command_list(Scene& scene, const std::vector<std::string>& shard_
                         continue;
                     }
 
+                    auto clear_color = (shard.is_swapchain_target && i == 0) ? window.ui.clear_color() : attachment.clear_color;
+
                     vk::RenderingAttachmentInfo info;
                     info.imageView = (shard.is_swapchain_target)
                         ? resources.swapchain_view(image_index)->handle()
@@ -113,8 +116,8 @@ auto Obsidian::command_list(Scene& scene, const std::vector<std::string>& shard_
                     info.imageLayout = attachment.layout.mLayout;
                     info.loadOp = Translator::to<vk::AttachmentLoadOp>(attachment.load_op.mLoadBehavior);
                     info.storeOp = Translator::to<vk::AttachmentStoreOp>(attachment.store_op.mStoreBehavior);
-                    info.clearValue = vk::ClearValue{ attachment.clear_color };
-
+                    info.clearValue = vk::ClearValue{ clear_color };
+                    
                     color_attachments.push_back(info);
                 }
 
@@ -206,6 +209,8 @@ auto Obsidian::command_list(Scene& scene, const std::vector<std::string>& shard_
 
                 command_buffer.handle().endRendering();
             }
+
+            window.ui.render(command_buffer.handle(), resources.swapchain_view(image_index)->handle());
 
             {
                 vk::ImageMemoryBarrier barrier{};

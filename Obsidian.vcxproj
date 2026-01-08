@@ -21,7 +21,16 @@
   <ItemGroup>
     <ClCompile Include="include\external\glm\detail\glm.cpp" />
     <ClCompile Include="include\external\glm\glm.cppm" />
+    <ClCompile Include="include\external\imgui\imgui_impl_glfw.cpp" />
+    <ClCompile Include="include\external\imgui\imgui_impl_vulkan.cpp" />
+    <ClCompile Include="include\external\imgui\imgui.cpp" />
+    <ClCompile Include="include\external\imgui\imgui_demo.cpp" />
+    <ClCompile Include="include\external\imgui\imgui_draw.cpp" />
+    <ClCompile Include="include\external\imgui\imgui_stdlib.cpp" />
+    <ClCompile Include="include\external\imgui\imgui_tables.cpp" />
+    <ClCompile Include="include\external\imgui\imgui_widgets.cpp" />
     <ClCompile Include="include\external\loguru\loguru.cpp" />
+    <ClCompile Include="src\platform\ui.cpp" />
     <ClCompile Include="src\external\spirv_reflect.c" />
     <ClCompile Include="src\external\stb_image.cpp" />
     <ClCompile Include="src\external\tiny_obj_loader.cpp" />
@@ -117,6 +126,7 @@
     <ClInclude Include="include\external\avk\vma_handle.hpp" />
     <ClInclude Include="include\external\avk\vulkan_helper_functions.hpp" />
     <ClInclude Include="include\external\glfw\glfw3.h" />
+    <ClInclude Include="include\external\glfw\glfw3native.h" />
     <ClInclude Include="include\external\glm\common.hpp" />
     <ClInclude Include="include\external\glm\detail\compute_common.hpp" />
     <ClInclude Include="include\external\glm\detail\compute_vector_decl.hpp" />
@@ -420,6 +430,15 @@
     <ClInclude Include="include\external\glslang\SPIRV\GlslangToSpv.h" />
     <ClInclude Include="include\external\glslang\SPIRV\Logger.h" />
     <ClInclude Include="include\external\glslang\SPIRV\SpvTools.h" />
+    <ClInclude Include="include\external\imgui\imgui_impl_glfw.h" />
+    <ClInclude Include="include\external\imgui\imgui_impl_vulkan.h" />
+    <ClInclude Include="include\external\imgui\imconfig.h" />
+    <ClInclude Include="include\external\imgui\imgui.h" />
+    <ClInclude Include="include\external\imgui\imgui_internal.h" />
+    <ClInclude Include="include\external\imgui\imgui_stdlib.h" />
+    <ClInclude Include="include\external\imgui\imstb_rectpack.h" />
+    <ClInclude Include="include\external\imgui\imstb_textedit.h" />
+    <ClInclude Include="include\external\imgui\imstb_truetype.h" />
     <ClInclude Include="include\external\loguru\loguru.hpp" />
     <ClInclude Include="include\external\reflect\spirv_reflect.h" />
     <ClInclude Include="include\external\stbimage\stb_image.h" />
