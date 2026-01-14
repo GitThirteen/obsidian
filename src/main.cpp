@@ -2,6 +2,20 @@
 
 /* !==== Neverending List of ToDo's ====! */
 // [ ] Implement lighting (Ambient, Directional, Point, for now..)
+// [ ] Environment map support
+// [ ] GGX Terrance-Cook PBR
+// [ ] Bloom
+// [ ] Compute shader particle system (rain)
+// [ ] LoD + Accel Octree
+// [ ] Ray-Traced Shadows
+// [ ] Texture check
+// [ ] Camera check
+// [ ] Build scene
+// Later:
+// [ ] Water ripples
+// [ ] Audio manager
+// [ ] Ray-traced reflections
+// [ ] Modular shader code (Allow toggling effects)
 // ===============================================================
 // [ ] 2x/4x MSAA / TAA & more...
 // [ ] Avoid write when compiling from GLSL to SPIR-V
@@ -10,11 +24,11 @@
 // [ ] LoD data structure
 // [ ] Ray tracing intersection data structure (Octree, maybe later BVH?)
 // [ ] Fix swapchain recreation on window resize
-// [ ] Fix FPS capping accuracy
 // [ ] Swap all AVK calls with regular VK calls (AVK too inconsistent)
 // [ ] Refactor like, idk, half the renderer
+// [ ] -> Use C++ modules instead of headers
 // [ ] Physics? (Colliders, Actors, Gravity, ...)
-// [ ] Raytracing!! Path Tracing? (Path Guiding...?)
+// [ ] Raytracing!! (For everything) Path Tracing? (Path Guiding...?)
 /* !====================================! */
 
 int main(int c, char* v[])

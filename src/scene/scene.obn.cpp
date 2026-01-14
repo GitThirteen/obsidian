@@ -261,6 +261,19 @@ auto SceneManager::load(const std::string& scenes_folder_path) -> void
 					continue;
 				}
 
+				if (element.type == "arcball_camera")
+				{
+					const auto& radius = element.data.position[0];
+					const auto& target = element.data.target;
+					ArcballCamera arcball_cam({ target[0], target[1], target[2] }, radius, m_window.glfw_window());
+
+					scene.add_camera(
+						std::make_shared<ArcballCamera>(std::move(arcball_cam))
+					);
+
+					continue;
+				}
+
 				if (element.type == "dynamic_camera")
 				{
 					const auto& pos = element.data.position;

@@ -125,7 +125,8 @@ void UserCamera::process_keyboard(double dt)
 
 void UserCamera::process_mouse()
 {
-	if (glfwGetMouseButton(this->m_glfw_window, GLFW_MOUSE_BUTTON_RIGHT) != GLFW_PRESS) {
+	if (glfwGetMouseButton(this->m_glfw_window, GLFW_MOUSE_BUTTON_RIGHT) != GLFW_PRESS)
+	{
 		this->m_first_mouse = true;
 		return;
 	}
@@ -153,6 +154,95 @@ void UserCamera::process_mouse()
 	this->m_options.pitch = std::clamp(this->m_options.pitch, -89.0f, 89.0f);
 
 	update_vectors();
+}
+
+// ============== //
+// ARCBALL CAMERA //
+// ============== //
+
+ArcballCamera::ArcballCamera(glm::vec3 target, float radius, GLFWwindow* glfw_window)
+	: Camera(CameraType::Arcball, glm::vec3(0)), m_target(target), m_radius(radius), m_glfw_window(glfw_window)
+{
+	spherical.x = 0.0f;
+	spherical.y = 90.0f;
+
+	update_position_from_spherical();
+}
+
+void ArcballCamera::update(double dt)
+{
+	process_input();
+}
+
+void ArcballCamera::process_input()
+{
+	if (!m_glfw_window) return;
+
+	double x_pos, y_pos;
+	glfwGetCursorPos(m_glfw_window, &x_pos, &y_pos);
+
+	if (glfwGetMouseButton(m_glfw_window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
+	{
+		if (!m_rotating)
+		{
+			m_rotating = true;
+			m_last_x = x_pos;
+			m_last_y = y_pos;
+			return;
+		}
+
+		double dx = x_pos - m_last_x;
+		double dy = y_pos - m_last_y;
+
+		spherical.x -= static_cast<float>(dx) * m_rotate_speed;
+		spherical.y -= static_cast<float>(dy) * m_rotate_speed;
+
+		spherical.y = std::clamp(spherical.y, 1.0f, 179.0f);
+
+		m_last_x = x_pos;
+		m_last_y = y_pos;
+
+		update_position_from_spherical();
+		return;
+	}
+	m_rotating = false;
+
+	if (glfwGetMouseButton(m_glfw_window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
+	{
+		if (!m_zooming)
+		{
+			m_zooming = true;
+			m_last_y = y_pos;
+			return;
+		}
+
+		double dy = y_pos - m_last_y;
+
+		m_radius += static_cast<float>(dy) * m_zoom_speed;
+		m_radius = std::clamp(m_radius, m_min_radius, m_max_radius);
+
+		m_last_y = y_pos;
+
+		update_position_from_spherical();
+		return;
+	}
+	m_zooming = false;
+}
+
+void ArcballCamera::update_position_from_spherical()
+{
+	float phi_rad = glm::radians(spherical.x);
+	float theta_rad = glm::radians(spherical.y);
+
+	float x = m_radius * sin(theta_rad) * cos(phi_rad);
+	float z = m_radius * sin(theta_rad) * sin(phi_rad);
+	float y = m_radius * cos(theta_rad);
+
+	glm::vec3 offset(x, y, z);
+
+	m_cam_vectors.position = m_target + offset;
+
+	look_at(m_target);
 }
 
 // ============== //
@@ -188,7 +278,8 @@ void DynamicCamera::reset()
 	this->m_curr_time = 0.0f;
 	this->m_curr_index = 0;
 
-	if (!this->m_path.empty()) {
+	if (!this->m_path.empty())
+	{
 		set_position(this->m_path.front().world_position);
 		look_at(this->m_path.front().target);
 	}
@@ -274,7 +365,8 @@ void DynamicCamera::interpolate()
 	const Keyframe& frame_end = m_path[m_curr_index + 1];
 
 	float segment_delta = frame_end.time - frame_start.time;
-	if (segment_delta <= OBN_EPSILON) {
+	if (segment_delta <= OBN_EPSILON)
+	{
 		set_position(frame_end.world_position);
 		return;
 	}

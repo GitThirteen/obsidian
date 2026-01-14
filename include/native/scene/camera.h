@@ -5,6 +5,7 @@
 enum class CameraType
 {
 	Static,		// A static camera cannot be moved. Once defined, it stays at a single place.
+	Arcball,	// An arcball camera can be rotated around a fixed point in the scene using the mouse.
 	User,		// A user camera can be moved by the user using WASD keys + mouse.
 	Dynamic		// A dynamic camera cannot be moved by the user, but can be used via manual instructions (keyframes).
 };
@@ -61,6 +62,38 @@ class StaticCamera : public Camera
 public:
 	StaticCamera(glm::vec3 position, glm::vec3 target);
 	void update(double dt) override;
+};
+
+// Arcball Camera
+
+class ArcballCamera : public Camera
+{
+public:
+	ArcballCamera(glm::vec3 target, float radius, GLFWwindow* glfw_window);
+
+	void update(double dt) override;
+
+private:
+	GLFWwindow* m_glfw_window;
+
+	glm::vec2 spherical;
+
+	float m_rotate_speed = 0.2f;
+	float m_zoom_speed = 0.05f;
+
+	float m_min_radius = 0.5f;
+	float m_max_radius = 50.0f;
+
+	glm::vec3 m_target;
+	float m_radius;
+
+	bool m_rotating = false;
+	bool m_zooming = false;
+	double m_last_x = 0.0;
+	double m_last_y = 0.0;
+
+	void process_input();
+	void update_position_from_spherical();
 };
 
 // User Camera
