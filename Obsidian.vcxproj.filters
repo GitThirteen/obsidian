@@ -1358,6 +1358,9 @@
     <ClInclude Include="include\external\glfw\glfw3native.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\native\utils\obn_vector.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="config.yaml" />
