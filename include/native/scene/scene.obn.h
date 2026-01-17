@@ -17,7 +17,6 @@ enum class SceneElement
 	Terrain,
 	Object,
 	Volume,
-	Light,
 	Camera
 };
 
@@ -34,6 +33,12 @@ public:
 	auto add_camera(std::shared_ptr<Camera> cam) -> void;
 	auto active_camera() -> Camera&;
 	auto cycle_camera() -> void;
+	auto add_ambient_light(const AmbientLight& light) -> void;
+	auto add_directional_light(const DirectionalLight& light) -> void;
+	auto add_scene_light(const SceneLight& light) -> void;
+	auto ambient_light() const -> const AmbientLight;
+	auto directional_light() const -> const DirectionalLight;
+	auto lights() const -> const std::vector<SceneLight>;
 	auto name() const -> const std::string&;
 
 private:
@@ -43,9 +48,12 @@ private:
 	SceneUpdateCallback m_on_update = nullptr;
 
 	std::vector<std::shared_ptr<SceneObject>> m_objects;
-	std::vector<std::shared_ptr<LightSource>> m_lights; // TODO: Lights are currently WIP, this is just a dummy for now.
 	std::vector<std::shared_ptr<Camera>> m_cameras;
 	size_t m_curr_camera_index = 0;
+
+	AmbientLight m_ambient;
+	DirectionalLight m_directional;
+	std::vector<SceneLight> m_lights;
 };
 
 class SceneManager

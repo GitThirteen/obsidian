@@ -15,7 +15,7 @@ struct SceneObject
 		std::string name = "Object"
 	) : m_mesh(std::move(mesh)), m_material(std::move(material)), m_name(std::move(name)), m_pipelines(pipelines) { };
 
-	auto create_descriptor_set(Root& root, avk::descriptor_pool& pool, const Pipeline& pipeline, const avk::buffer& cam_data) -> void;
+	auto create_descriptor_set(Root& root, avk::descriptor_pool& pool, const Pipeline& pipeline) -> void;
 
 	auto set_position(const glm::vec3& pos) -> void;
 	auto translate(const glm::vec3& offset) -> void;

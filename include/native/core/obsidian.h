@@ -47,7 +47,10 @@ public:
 
 private:
     FrameTimer m_timer;
-    avk::buffer m_camera_buffer;
+    
+    std::vector<avk::buffer> m_camera_buffers;
+    std::vector<avk::buffer> m_light_buffers;
+    std::vector<vk::DescriptorSet> m_global_descriptor_sets;
 
-    auto command_list(Scene& scene, const std::vector<std::string>& shard_order) -> std::vector<avk::recorded_commands_t>;
+    auto command_list(Scene& scene, const std::vector<std::string>& shard_order, vk::DescriptorSet global_set) -> std::vector<avk::recorded_commands_t>;
 };

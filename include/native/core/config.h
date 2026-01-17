@@ -19,6 +19,26 @@ struct ShardConfig
     std::vector<std::string> pipelines;
 };
 
+struct LightConfig
+{
+    struct Data
+    {
+        std::array<float, 3u> color = { 0.0f, 0.0f, 0.0f };
+        std::array<float, 3u> direction = { 0.0f, 0.0f, 0.0f };
+        std::array<float, 3u> position = { 0.0f, 0.0f, 0.0f };
+        float intensity = 0.0f;
+        float radius = 0.0f;
+        float inner_cutoff = 0.0f;
+        float outer_cutoff = 0.0f;
+        float falloff = 0.0f;
+    };
+
+    std::string name;
+    std::string type;
+    std::vector<std::string> pipelines;
+    Data data;
+};
+
 struct MaterialConfig
 {
     struct Textures
@@ -62,12 +82,6 @@ struct SceneElementConfig
     std::string type;
     std::vector<std::string> pipelines;
     Data data;
-};
-
-struct SceneConfig
-{
-    std::vector<SceneElementConfig> elements;
-    std::vector<MaterialConfig> materials;
 };
 
 namespace c4
@@ -176,12 +190,30 @@ namespace c4
             return true;
         }
 
-        inline bool read(c4::yml::ConstNodeRef const& n, SceneConfig* v)
+        inline bool read(c4::yml::ConstNodeRef const& n, LightConfig::Data* v)
         {
             if (!n.is_map()) return false;
 
-            if (n.has_child("materials")) n["materials"] >> v->materials;
-            if (n.has_child("elements"))  n["elements"] >> v->elements;
+            if (n.has_child("color"))           n["color"] >> v->color;
+            if (n.has_child("direction"))       n["direction"] >> v->direction;
+            if (n.has_child("position"))        n["position"] >> v->position;
+            if (n.has_child("intensity"))       n["intensity"] >> v->intensity;
+            if (n.has_child("radius"))          n["radius"] >> v->radius;
+            if (n.has_child("inner_cutoff"))    n["inner_cutoff"] >> v->inner_cutoff;
+            if (n.has_child("outer_cutoff"))    n["outer_cutoff"] >> v->outer_cutoff;
+            if (n.has_child("falloff"))         n["falloff"] >> v->falloff;
+
+            return true;
+        }
+
+        inline bool read(c4::yml::ConstNodeRef const& n, LightConfig* v)
+        {
+            if (!n.is_map()) return false;
+
+            if (n.has_child("name")) n["name"] >> v->name;
+            if (n.has_child("type")) n["type"] >> v->type;
+            if (n.has_child("pipelines")) n["pipelines"] >> v->pipelines;
+            if (n.has_child("data")) n["data"] >> v->data;
 
             return true;
         }

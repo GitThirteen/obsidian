@@ -180,7 +180,7 @@ struct Pipeline
 	auto elements() const -> std::size_t;
 	auto type() const -> PipelineType;
 	auto has_shader(ShaderType type) const -> bool;
-	auto bind_into(avk::command_buffer& cmd_buffer) const -> void;
+	auto bind_into(avk::command_buffer_t& cmd_buffer) const -> void;
 	auto layout_handle() const -> vk::PipelineLayout;
 	auto make_descriptor_set(avk::descriptor_pool& pool, uint32_t set_index = 0) const -> vk::DescriptorSet;
 

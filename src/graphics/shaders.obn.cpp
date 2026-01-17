@@ -187,13 +187,13 @@ auto Pipeline::has_shader(ShaderType type) const -> bool
 	return this->m_shaders.find(type) != this->m_shaders.end();
 }
 
-auto Pipeline::bind_into(avk::command_buffer& cmd_buffer) const -> void
+auto Pipeline::bind_into(avk::command_buffer_t& cmd_buffer) const -> void
 {
 	std::visit([&](auto& pipeline) {
 		using T = std::decay_t<decltype(pipeline)>;
 		if constexpr(IsValidPipeline<T>)
 		{
-			cmd_buffer->record(avk::command::bind_pipeline(pipeline.as_reference()));
+			cmd_buffer.record(avk::command::bind_pipeline(pipeline.as_reference()));
 		}
 		else
 		{

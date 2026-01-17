@@ -1,10 +1,10 @@
 #include <native/scene/object.h>
 
-auto SceneObject::create_descriptor_set(Root& root, avk::descriptor_pool& pool, const Pipeline& pipeline, const avk::buffer& cam_data) -> void
+auto SceneObject::create_descriptor_set(Root& root, avk::descriptor_pool& pool, const Pipeline& pipeline) -> void
 {
     if (has_descriptor_set()) return;
 
-	m_descriptor_set = pipeline.make_descriptor_set(pool);
+	m_descriptor_set = pipeline.make_descriptor_set(pool, 1);
 
     auto bind_texture = [&](int binding, std::shared_ptr<TextureAsset> tex) {
         if (!tex) return;
@@ -16,22 +16,20 @@ auto SceneObject::create_descriptor_set(Root& root, avk::descriptor_pool& pool, 
         : (m_material->albedo_map) ? &m_material->albedo_map->handle 
         : nullptr;
 
-    ShaderDescriptor::write_uniform_buffer(root.device(), m_descriptor_set, 0, cam_data);
-
     if (m_material->is_volume())
     {
         bind_texture(1, m_material->volume_map);
     }
     else
     {
-        bind_texture(1, m_material->albedo_map);
-        bind_texture(2, m_material->roughness_map);
-        bind_texture(3, m_material->normal_map);
-        bind_texture(4, m_material->ao_map);
+        bind_texture(0, m_material->albedo_map);
+        bind_texture(1, m_material->roughness_map);
+        bind_texture(2, m_material->normal_map);
+        bind_texture(3, m_material->ao_map);
 
         if (m_material->ubo.has_value())
         {
-            ShaderDescriptor::write_uniform_buffer(root.device(), m_descriptor_set, 5, m_material->ubo);
+            ShaderDescriptor::write_uniform_buffer(root.device(), m_descriptor_set, 4, m_material->ubo);
         }
     }
 }

@@ -2,6 +2,7 @@
 
 #include <native/core/include.h>
 #include <native/core/root.h>
+#include <native/scene/light.h>
 
 struct Vertex
 {
@@ -20,6 +21,13 @@ struct CameraData
 {
     glm::mat4 view_proj;
     glm::vec4 pos;
+};
+
+struct GPULightBlock
+{
+    AmbientLight ambient;
+    DirectionalLight directional;
+    SceneLight scene_lights[16];
 };
 
 enum class GeometricPrimitiveType

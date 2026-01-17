@@ -12,8 +12,8 @@ icon: "assets/icon.png" # doesn't do anything yet
 
 # List of scenes to be loaded at startup. The first scene will be the active scene.
 scenes:
-#  - "example"
-  - "volumetric"
+  - "example"
+#  - "volumetric"
 
 # Render shards are defined here. A shard has the following structure:
 # - name: Unique identifier for the shard
@@ -36,7 +36,7 @@ shards:
         load: "clear"
         store: "dont_care"
         layout: "depth"
-    pipelines: ["base", "volumetric"]
+    pipelines: ["base"]
 
 # Define the order in which shards are rendered.
 # If not specified, shards will be rendered in the order they are defined.

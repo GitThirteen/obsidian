@@ -1,16 +1,16 @@
 #include <native/core/obsidian.h>
 
 /* !==== Neverending List of ToDo's ====! */
-// [ ] Implement lighting (Ambient, Directional, Point, for now..)
-// [ ] Environment map support
-// [ ] GGX Terrance-Cook PBR
-// [ ] Bloom
-// [ ] Compute shader particle system (rain)
-// [ ] LoD + Accel Octree
-// [ ] Ray-Traced Shadows
-// [ ] Texture check
-// [ ] Camera check
-// [ ] Build scene
+// [THU] [ ] Implement lighting (Ambient, Directional, Point, for now..)
+// [THU] [ ] Environment map support
+// [THU] [ ] GGX Terrance-Cook PBR
+// [FRI] [ ] Bloom
+// [FRI] [ ] Compute shader particle system (rain)
+// [FRI] [ ] LoD + Accel Octree
+// [SAT] [ ] Ray-Traced Shadows
+// [SUN] [ ] Texture check
+// [SUN] [ ] Camera check
+// [SUN] [ ] Build scene
 // Later:
 // [ ] Water ripples
 // [ ] Audio manager
@@ -20,11 +20,9 @@
 // [ ] 2x/4x MSAA / TAA & more...
 // [ ] Avoid write when compiling from GLSL to SPIR-V
 // [ ] Add audio support
-// [ ] Add a simple GUI
-// [ ] LoD data structure
-// [ ] Ray tracing intersection data structure (Octree, maybe later BVH?)
+// [ ] Improve GUI
 // [ ] Fix swapchain recreation on window resize
-// [ ] Swap all AVK calls with regular VK calls (AVK too inconsistent)
+// [ ] Swap all AVK calls with regular VK calls (own abstraction - Magma, AVK too inconsistent)
 // [ ] Refactor like, idk, half the renderer
 // [ ] -> Use C++ modules instead of headers
 // [ ] Physics? (Colliders, Actors, Gravity, ...)

@@ -70,15 +70,51 @@ void Scene::cycle_camera()
 	LOG_S(INFO) << "Switched to cam " << this->m_curr_camera_index;
 }
 
+auto Scene::add_ambient_light(const AmbientLight& light) -> void
+{
+	m_ambient = light;
+}
+
+auto Scene::add_directional_light(const DirectionalLight& light) -> void
+{
+	m_directional = light;
+}
+
+auto Scene::add_scene_light(const SceneLight& light) -> void
+{
+	if (m_lights.size() >= 16)
+	{
+		LOG_S(WARNING) << "A scene cannot hold more than 16 scene lights. (Scene '" << m_name << "' has 16)";
+		return;
+	}
+
+	m_lights.push_back(light);
+}
+
+auto Scene::ambient_light() const -> const AmbientLight
+{
+	return m_ambient;
+}
+
+auto Scene::directional_light() const -> const DirectionalLight
+{
+	return m_directional;
+}
+
+auto Scene::lights() const -> const std::vector<SceneLight>
+{
+	return m_lights;
+}
+
 const std::string& Scene::name() const
 {
-	return this->m_name;
+	return m_name;
 }
 
 void SceneManager::create_scene(const std::string& name, SceneInitCallback init, SceneUpdateCallback update)
 {
 	auto scene = std::make_shared<Scene>(name, init, update);
-	this->m_scenes[name] = scene;
+	m_scenes[name] = scene;
 }
 
 auto SceneManager::load(const std::string& scenes_folder_path) -> void
@@ -87,7 +123,6 @@ auto SceneManager::load(const std::string& scenes_folder_path) -> void
 		if (type == "terrain")  return SceneElement::Terrain;
 		if (type == "object")   return SceneElement::Object;
 		if (type == "volume")   return SceneElement::Volume;
-		if (type == "light")    return SceneElement::Light;
 		if (type == "static_camera" || type == "user_camera" || "dynamic_camera") return SceneElement::Camera;
 		return SceneElement::Unknown;
 	};
@@ -116,6 +151,7 @@ auto SceneManager::load(const std::string& scenes_folder_path) -> void
 
         const auto& scene_elements = Config::get<std::vector<SceneElementConfig>>("elements");
 		const auto& scene_materials = Config::get<std::vector<MaterialConfig>>("materials");
+		const auto& scene_lights = Config::get<std::vector<LightConfig>>("lights");
 
 		for (const auto& material : scene_materials)
 		{
@@ -229,11 +265,6 @@ auto SceneManager::load(const std::string& scenes_folder_path) -> void
 				continue;
 			}
 
-			if (element_type == SceneElement::Light)
-			{
-				continue;
-			}
-
 			if (element_type == SceneElement::Camera)
 			{
 				if (element.type == "user_camera")
@@ -285,6 +316,65 @@ auto SceneManager::load(const std::string& scenes_folder_path) -> void
 
 					continue;
 				}
+			}
+		}
+
+		for (const auto& light : scene_lights)
+		{
+			if (light.type == "ambient")
+			{
+				AmbientLight ambient{};
+				ambient.color = { light.data.color[0], light.data.color[1], light.data.color[2] };
+				ambient.intensity = light.data.intensity;
+
+				scene.add_ambient_light(ambient);
+				continue;
+			}
+
+			if (light.type == "directional")
+			{
+				DirectionalLight directional{};
+				directional.color = { light.data.color[0], light.data.color[1], light.data.color[2] };
+				directional.intensity = light.data.intensity;
+				directional.direction = { light.data.direction[0], light.data.direction[1], light.data.direction[2] };
+
+				scene.add_directional_light(directional);
+				continue;
+			}
+
+			if (light.type == "point")
+			{
+				SceneLight point;
+
+				point.is_spotlight = 0;
+
+				point.color = { light.data.color[0], light.data.color[1], light.data.color[2] };
+				point.intensity = light.data.intensity;
+				point.direction = { light.data.direction[0], light.data.direction[1], light.data.direction[2] };
+				point.position = { light.data.position[0], light.data.position[1], light.data.position[2] };
+				point.radius = light.data.radius;
+
+				scene.add_scene_light(point);
+				continue;
+			}
+
+			if (light.type == "spot")
+			{
+				SceneLight spot;
+
+				spot.is_spotlight = 1;
+
+				spot.color = { light.data.color[0], light.data.color[1], light.data.color[2] };
+				spot.intensity = light.data.intensity;
+				spot.direction = { light.data.direction[0], light.data.direction[1], light.data.direction[2] };
+				spot.position = { light.data.position[0], light.data.position[1], light.data.position[2] };
+				spot.radius = light.data.radius;
+				spot.inner_cutoff = light.data.inner_cutoff;
+				spot.outer_cutoff = light.data.outer_cutoff;
+				spot.falloff = light.data.falloff;
+
+				scene.add_scene_light(spot);
+				continue;
 			}
 		}
 

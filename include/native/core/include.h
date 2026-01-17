@@ -86,6 +86,10 @@ concept IsBinaryContainer = std::ranges::contiguous_range<T> && std::ranges::siz
 template<typename T>
 concept IsVector = std::same_as<T, std::vector<typename T::value_type, typename T::allocator_type>>;
 
+#define PADDING_JOIN(x, y) x ## y
+#define PADDING_NAME(x, y) PADDING_JOIN(x, y)
+#define PADDING(bytes) char PADDING_NAME(_pad_, __LINE__)[bytes]
+
 #define OBN_DEFAULT_COLOR_FORMAT vk::Format::eB8G8R8A8Unorm
 #define OBN_DEFAULT_DEPTH_FORMAT vk::Format::eD32Sfloat
 #define OBN_DEFAULT_COLOR_SPACE  vk::ColorSpaceKHR::eSrgbNonlinear

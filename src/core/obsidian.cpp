@@ -4,11 +4,68 @@ auto Obsidian::flow() -> void
 {
     const auto& shard_order = Config::get<std::vector<std::string>>("order");
     const int fps = Config::get<int>("fps");
+
 	m_timer = FrameTimer(fps);
     window.ui.initialize(root, window.glfw_window(), resources);
 
-    m_camera_buffer = root.create_buffer(avk::memory_usage::host_visible, vk::BufferUsageFlagBits::eUniformBuffer, avk::generic_buffer_meta::create_from_data(CameraData{}));
+    const auto& frames = resources.frames_in_flight();
+    m_camera_buffers.resize(frames);
+    m_light_buffers.resize(frames);
+    m_global_descriptor_sets.resize(frames);
 
+    // Initialize camera & light buffers per in-flight frame
+    for (size_t i = 0; i < frames; ++i)
+    {
+        m_camera_buffers[i] = root.create_buffer(avk::memory_usage::host_visible, vk::BufferUsageFlagBits::eUniformBuffer, avk::generic_buffer_meta::create_from_data(CameraData{}));
+        m_light_buffers[i] = root.create_buffer(avk::memory_usage::host_visible, vk::BufferUsageFlagBits::eUniformBuffer, avk::generic_buffer_meta::create_from_data(GPULightBlock{}));
+    }
+
+    // Prewarming
+    Pipeline* base_pipeline = nullptr;
+
+    for (const auto& shard_name : shard_order)
+    {
+        auto& shard = resources.shards().at(shard_name);
+
+        for (const auto& pipeline_name : shard.pipelines)
+        {
+            auto& pipeline = shaders.pipeline(pipeline_name, shard);
+
+            if (!base_pipeline)
+            {
+                base_pipeline = &pipeline;
+            }
+        }
+    }
+
+    std::array<vk::WriteDescriptorSet, 2> writes;
+
+    writes[0].setDstBinding(0);
+    writes[0].setDstArrayElement(0);
+    writes[0].setDescriptorCount(1);
+    writes[0].setDescriptorType(vk::DescriptorType::eUniformBuffer);
+    
+    writes[1].setDstBinding(1);
+    writes[1].setDstArrayElement(0);
+    writes[1].setDescriptorCount(1);
+    writes[1].setDescriptorType(vk::DescriptorType::eUniformBuffer);
+
+    for (size_t i = 0; i < frames; ++i)
+    {
+        m_global_descriptor_sets[i] = base_pipeline->make_descriptor_set(resources.descriptor_pool(), 0);
+
+        vk::DescriptorBufferInfo cam_info(m_camera_buffers[i]->handle(), 0, VK_WHOLE_SIZE);
+        vk::DescriptorBufferInfo light_info(m_light_buffers[i]->handle(), 0, VK_WHOLE_SIZE);
+
+        writes[0].setDstSet(m_global_descriptor_sets[i]);
+        writes[0].setPBufferInfo(&cam_info);
+        
+        writes[1].setDstSet(m_global_descriptor_sets[i]);
+        writes[1].setPBufferInfo(&light_info);
+
+        root.device().updateDescriptorSets(static_cast<uint32_t>(writes.size()), writes.data(), 0, nullptr);
+    }
+    
     while (!window.should_close())
     {
         m_timer.tick();
@@ -28,14 +85,28 @@ auto Obsidian::flow() -> void
 
         camera.set_aspect_ratio(static_cast<float>(extent.width), static_cast<float>(extent.height));
 
+        CameraData cam_data;
+        cam_data.view_proj = camera.get_view_projection();
+        cam_data.pos = glm::vec4(camera.position(), 1.0f);
+
+        GPULightBlock light_data;
+        light_data.ambient = scene.ambient_light();
+        light_data.directional = scene.directional_light();
+        for (size_t i = 0; i < scene.lights().size(); ++i)
+        {
+            light_data.scene_lights[i] = scene.lights()[i];
+        }
+
+        auto in_flight_index = frame.current_frame_index();
+        m_camera_buffers[in_flight_index]->fill(&cam_data, 0);
+        m_light_buffers[in_flight_index]->fill(&light_data, 0);
+
         auto& cb = frame.current_command_buffer();
-        auto cl = command_list(scene, shard_order);
-        // TODO: optimize
-        // TODO: pre-warm pipelines once before rendering starts, don't create them on the fly here
+        auto cl = command_list(scene, shard_order, m_global_descriptor_sets[in_flight_index]);
         root.record(cl).into_command_buffer(cb);
 
         this->frame.submit();
-        this->m_timer.cap_fps(); // TODO: fix accuracy
+        this->m_timer.cap_fps();
     }
 
 	this->root.device().waitIdle();
@@ -57,7 +128,7 @@ auto Obsidian::shatter() -> void
     root.destroy();
 }
 
-auto Obsidian::command_list(Scene& scene, const std::vector<std::string>& shard_order) -> std::vector<avk::recorded_commands_t>
+auto Obsidian::command_list(Scene& scene, const std::vector<std::string>& shard_order, vk::DescriptorSet global_set) -> std::vector<avk::recorded_commands_t>
 {
     return {
         avk::command::custom_commands([&](avk::command_buffer_t& command_buffer) {
@@ -151,27 +222,8 @@ auto Obsidian::command_list(Scene& scene, const std::vector<std::string>& shard_
                 {
                     const auto& blueprint = shaders.blueprint(pipeline_name);
                     auto& pipeline = shaders.pipeline(pipeline_name, shard);
-
-                    switch (pipeline.type())
-                    {
-                    case PipelineType::Graphics:
-                        command_buffer.record(avk::command::bind_pipeline(pipeline.get<avk::graphics_pipeline>().as_reference()));
-                        break;
-                    case PipelineType::Compute:
-                        command_buffer.record(avk::command::bind_pipeline(pipeline.get<avk::compute_pipeline>().as_reference()));
-                        break;
-                    case PipelineType::RayTracing:
-                        command_buffer.record(avk::command::bind_pipeline(pipeline.get<avk::ray_tracing_pipeline>().as_reference()));
-                        break;
-                    default:
-                        throw std::runtime_error("How did you get here?");
-                    }
-
-                    CameraData currentData;
-                    currentData.view_proj = scene.active_camera().get_view_projection();
-                    currentData.pos = glm::vec4(scene.active_camera().position(), 1.0f);
-
-                    m_camera_buffer->fill(&currentData, 0);
+                    pipeline.bind_into(command_buffer);
+                    command_buffer.handle().bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeline.layout_handle(), 0, 1, &global_set, 0, nullptr);
 
                     // TODO: batch drawing calls!!!
                     for (const auto& object : scene.objects())
@@ -181,8 +233,9 @@ auto Obsidian::command_list(Scene& scene, const std::vector<std::string>& shard_
                             continue;
                         }
 
-                        if (!object->has_descriptor_set()) {
-                            object->create_descriptor_set(root, resources.descriptor_pool(), pipeline, m_camera_buffer);
+                        if (!object->has_descriptor_set())
+                        {
+                            object->create_descriptor_set(root, resources.descriptor_pool(), pipeline);
                         }
 
                         glm::mat4 inv_model = glm::inverse(object->model_matrix());
@@ -192,8 +245,7 @@ auto Obsidian::command_list(Scene& scene, const std::vector<std::string>& shard_
                         struct PushData { glm::mat4 model; glm::vec4 local_cam_pos; };
                         PushData pc_data = { object->model_matrix(), local_cam_pos };
                         command_buffer.handle().pushConstants(pipeline.layout_handle(), blueprint.push_constant_stages, 0, sizeof(PushData), &pc_data);
-
-                        command_buffer.handle().bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeline.layout_handle(), 0, 1, &object->descriptor_set(), 0, nullptr);
+                        command_buffer.handle().bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeline.layout_handle(), 1, 1, &object->descriptor_set(), 0, nullptr);
 
                         if (object->index_count() > 0)
                         {
