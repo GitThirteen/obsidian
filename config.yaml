@@ -36,7 +36,7 @@ shards:
         load: "clear"
         store: "dont_care"
         layout: "depth"
-    pipelines: ["base"]
+    pipelines: ["base", "skybox"]
 
 # Define the order in which shards are rendered.
 # If not specified, shards will be rendered in the order they are defined.

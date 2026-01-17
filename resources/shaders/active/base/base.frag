@@ -26,6 +26,8 @@ layout(set = 0, binding = 1) uniform LightBlock {
     SceneLight sceneLights[16];
 } u_lights;
 
+layout(set = 0, binding = 2) uniform sampler2D u_envmap;
+
 layout(set = 1, binding = 0) uniform sampler2D texAlbedo;
 layout(set = 1, binding = 1) uniform sampler2D texRoughness;
 layout(set = 1, binding = 2) uniform sampler2D texNormal;
@@ -86,6 +88,7 @@ vec3 FresnelSchlick(vec3 F0, vec3 V, vec3 H) {
     return F0 + (1.0 - F0) * exp2((-5.55473 * VdotH - 6.98316) * VdotH);
 }
 
+// Calculate GGX
 vec3 Evaluate(vec3 V, vec3 L, vec3 N, vec3 radiance, vec3 albedo, float roughness, float metallic, vec3 F0) {
     vec3 H = normalize(V + L);
     
@@ -104,6 +107,44 @@ vec3 Evaluate(vec3 V, vec3 L, vec3 N, vec3 radiance, vec3 albedo, float roughnes
     float NdotL = max(dot(N, L), 0.0);
     vec3 lambDiffuse = albedo / PI;
     return (kD * lambDiffuse + specular) * radiance * NdotL;
+}
+
+// Envmap sampling
+const vec2 invAtan = vec2(0.1591, 0.3183); // (1/2pi, 1/pi)
+
+vec2 SampleSphericalMap(vec3 v)
+{
+    vec2 uv = vec2(atan(v.z, v.x), asin(v.y));
+    uv *= invAtan;
+    uv += 0.5;
+    uv.y = 1.0 - uv.y; // Vulkan's Y points downwards
+    return uv;
+}
+
+vec3 IBL(vec3 N, vec3 V, vec3 albedo, float roughness, float metallic, vec3 F0) 
+{
+    // Diffuse (Irradiance)
+    vec2 uvN = SampleSphericalMap(normalize(N));
+    vec3 irradiance = textureLod(u_envmap, uvN, 10.0).rgb;
+
+    // Specular (Reflection)
+    vec3 R = reflect(-V, N);
+    vec2 uvR = SampleSphericalMap(normalize(R));
+    
+    // Simulating roughness (mega janky)
+    float maxLod = 10.0;
+    vec3 prefilteredColor = textureLod(u_envmap, uvR, roughness * maxLod).rgb;
+
+    vec3 F = FresnelSchlick(F0, V, normalize(V + R)); 
+    
+    vec3 kS = F;
+    vec3 kD = 1.0 - kS;
+    kD *= (1.0 - metallic);
+    
+    vec3 diffuse = irradiance * albedo;
+    vec3 specular = prefilteredColor * F;
+
+    return (kD * diffuse + specular);
 }
 
 void main() {
@@ -160,7 +201,7 @@ void main() {
     }
     
     // 3. SCENE LIGHTS (POINT & SPOT)
-    vec3 ambient = u_lights.ambientLighting.rgb * u_lights.ambientLighting.w * albedo * ao;
+    vec3 ambient = IBL(N, V, albedo, roughness, metallic, F0) * u_lights.ambientLighting.w * ao;
     vec3 color = ambient + Lo;
 
     // TONE CORRECTION (Important @Future Me: Move this to a separate post-processing shader in the whole pipeline, also maybe look into ACES color correction?)

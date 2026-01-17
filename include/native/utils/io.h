@@ -4,11 +4,12 @@
 
 struct ObsidianIO
 {
-    static std::string read_file(const std::string& path);
-    static void write_file(const std::string& path, const IsBinaryContainer auto& data)
+    static auto read_file(const std::string& path) -> std::string;
+    static auto write_file(const std::string& path, const IsBinaryContainer auto& data) -> void
     {
         std::ofstream file(path, std::ios::binary | std::ios::out | std::ios::trunc);
-        if (!file.is_open()) {
+        if (!file.is_open())
+        {
             throw std::runtime_error("Failed to write file: " + path);
         }
 

@@ -101,7 +101,22 @@ auto Scene::directional_light() const -> const DirectionalLight
 	return m_directional;
 }
 
-auto Scene::lights() const -> const std::vector<SceneLight>
+auto Scene::add_envmap(const std::string& path) -> void
+{
+	m_envmap = EnvironmentMap::load(path);
+}
+
+auto Scene::envmap() const -> const EnvironmentMap&
+{
+	return m_envmap;
+}
+
+auto Scene::envmap() -> EnvironmentMap&
+{
+	return m_envmap;
+}
+
+auto Scene::lights() const -> const std::vector<SceneLight>&
 {
 	return m_lights;
 }
@@ -149,9 +164,11 @@ auto SceneManager::load(const std::string& scenes_folder_path) -> void
 
 		Scene scene(scene_name, nullptr, nullptr);
 
+		// TODO: improve resolving empty / inexistent entries (envmap would currently crash the renderer if it doesn't exist as field)
         const auto& scene_elements = Config::get<std::vector<SceneElementConfig>>("elements");
 		const auto& scene_materials = Config::get<std::vector<MaterialConfig>>("materials");
 		const auto& scene_lights = Config::get<std::vector<LightConfig>>("lights");
+		const auto& scene_envmap = Config::get<std::string>("envmap");
 
 		for (const auto& material : scene_materials)
 		{
@@ -377,6 +394,8 @@ auto SceneManager::load(const std::string& scenes_folder_path) -> void
 				continue;
 			}
 		}
+
+		scene.add_envmap(scene_envmap);
 
 		scene.initialize(m_root, m_window);
 		m_scenes.emplace(scene_name, std::make_shared<Scene>(std::move(scene)));

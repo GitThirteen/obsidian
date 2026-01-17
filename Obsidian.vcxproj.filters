@@ -117,6 +117,12 @@
     <ClCompile Include="include\external\imgui\imgui_stdlib.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\graphics\envmap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\core\image_barrier.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\native\core\include.h">
@@ -1361,6 +1367,12 @@
     <ClInclude Include="include\native\utils\obn_vector.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\native\graphics\envmap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\native\core\image_barrier.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="config.yaml" />
@@ -1790,6 +1802,8 @@
     <None Include="resources\scenes\example.yaml" />
     <None Include="resources\shaders\active\base\base.frag" />
     <None Include="resources\shaders\active\base\base.vert" />
+    <None Include="resources\shaders\active\skybox\skybox.frag" />
+    <None Include="resources\shaders\active\skybox\skybox.vert" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="include\external\glfw\glfw3.lib" />

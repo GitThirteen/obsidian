@@ -30,6 +30,8 @@
     <ClCompile Include="include\external\imgui\imgui_tables.cpp" />
     <ClCompile Include="include\external\imgui\imgui_widgets.cpp" />
     <ClCompile Include="include\external\loguru\loguru.cpp" />
+    <ClCompile Include="src\core\image_barrier.cpp" />
+    <ClCompile Include="src\graphics\envmap.cpp" />
     <ClCompile Include="src\platform\ui.cpp" />
     <ClCompile Include="src\external\spirv_reflect.c" />
     <ClCompile Include="src\external\stb_image.cpp" />
@@ -445,6 +447,8 @@
     <ClInclude Include="include\external\tinyobjloader\tiny_obj_loader.h" />
     <ClInclude Include="include\external\vma\vk_mem_alloc.h" />
     <ClInclude Include="include\external\yaml\ryml.hpp" />
+    <ClInclude Include="include\native\core\image_barrier.h" />
+    <ClInclude Include="include\native\graphics\envmap.h" />
     <ClInclude Include="include\native\scene\assets.obn.h" />
     <ClInclude Include="include\native\graphics\shard.h" />
     <ClInclude Include="include\native\scene\camera.h" />
@@ -618,6 +622,8 @@
     <None Include="resources\scenes\example.yaml" />
     <None Include="resources\shaders\active\base\base.frag" />
     <None Include="resources\shaders\active\base\base.vert" />
+    <None Include="resources\shaders\active\skybox\skybox.frag" />
+    <None Include="resources\shaders\active\skybox\skybox.vert" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="include\external\glfw\glfw3.lib" />

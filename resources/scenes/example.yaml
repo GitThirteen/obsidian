@@ -1,5 +1,8 @@
 # This is an example scene configuration file for the rendering engine.
 
+# [OPTIONAL] Path to the used environment map.
+envmap: "./resources/textures/overcast_soil_puresky_2k.hdr"
+
 # The general structure of a material is as follows:
 # - name: Unique identifier for the material
 # - base_color: RGBA color of the material

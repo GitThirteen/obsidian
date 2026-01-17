@@ -13,7 +13,7 @@ struct Vector
 
     template<typename... Args>
     requires (sizeof...(Args) == N) && (std::convertible_to<Args, T> && ...)
-    Vector(Args&&... args) : data{ static_cast<T>(args)... } { }
+    Vector(Args&&... args) : m_data{ static_cast<T>(args)... } { }
 
     Vector(const Vector& other) = default;
 
@@ -151,7 +151,7 @@ struct Vector
 
     explicit operator std::vector<T>() const
     {
-        return std::vector<T>(data.begin(), data.end());
+        return std::vector<T>(m_data.begin(), m_data.end());
     }
 
     explicit operator std::array<T, N>() const
@@ -176,7 +176,7 @@ struct Vector
 
     explicit operator ImVec4() const requires (N == 4)
     {
-        return ImVec4(static_cast<float>(x()), static_cast<float>(y()), static_cast<float>(z()), static_cast(w()));
+        return ImVec4(static_cast<float>(x()), static_cast<float>(y()), static_cast<float>(z()), static_cast<float>(w()));
     }
 
     explicit operator ImVector<T>() const

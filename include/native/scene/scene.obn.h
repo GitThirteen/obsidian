@@ -5,6 +5,7 @@
 #include <native/scene/camera.h>
 #include <native/scene/light.h>
 #include <native/scene/object.h>
+#include <native/graphics/envmap.h>
 
 class Scene;
 
@@ -38,7 +39,10 @@ public:
 	auto add_scene_light(const SceneLight& light) -> void;
 	auto ambient_light() const -> const AmbientLight;
 	auto directional_light() const -> const DirectionalLight;
-	auto lights() const -> const std::vector<SceneLight>;
+	auto add_envmap(const std::string& path) -> void;
+	auto envmap() const -> const EnvironmentMap&;
+	auto envmap() -> EnvironmentMap&;
+	auto lights() const -> const std::vector<SceneLight>&;
 	auto name() const -> const std::string&;
 
 private:
@@ -54,6 +58,7 @@ private:
 	AmbientLight m_ambient;
 	DirectionalLight m_directional;
 	std::vector<SceneLight> m_lights;
+	EnvironmentMap m_envmap;
 };
 
 class SceneManager
