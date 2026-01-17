@@ -38,32 +38,12 @@ auto Obsidian::flow() -> void
         }
     }
 
-    std::array<vk::WriteDescriptorSet, 2> writes;
-
-    writes[0].setDstBinding(0);
-    writes[0].setDstArrayElement(0);
-    writes[0].setDescriptorCount(1);
-    writes[0].setDescriptorType(vk::DescriptorType::eUniformBuffer);
-    
-    writes[1].setDstBinding(1);
-    writes[1].setDstArrayElement(0);
-    writes[1].setDescriptorCount(1);
-    writes[1].setDescriptorType(vk::DescriptorType::eUniformBuffer);
-
     for (size_t i = 0; i < frames; ++i)
     {
         m_global_descriptor_sets[i] = base_pipeline->make_descriptor_set(resources.descriptor_pool(), 0);
 
-        vk::DescriptorBufferInfo cam_info(m_camera_buffers[i]->handle(), 0, VK_WHOLE_SIZE);
-        vk::DescriptorBufferInfo light_info(m_light_buffers[i]->handle(), 0, VK_WHOLE_SIZE);
-
-        writes[0].setDstSet(m_global_descriptor_sets[i]);
-        writes[0].setPBufferInfo(&cam_info);
-        
-        writes[1].setDstSet(m_global_descriptor_sets[i]);
-        writes[1].setPBufferInfo(&light_info);
-
-        root.device().updateDescriptorSets(static_cast<uint32_t>(writes.size()), writes.data(), 0, nullptr);
+        ShaderDescriptor::write_uniform_buffer(root.device(), m_global_descriptor_sets[i], 0, m_camera_buffers[i], 0, VK_WHOLE_SIZE);
+        ShaderDescriptor::write_uniform_buffer(root.device(), m_global_descriptor_sets[i], 1, m_light_buffers[i], 0, VK_WHOLE_SIZE);
     }
     
     while (!window.should_close())
