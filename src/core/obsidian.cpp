@@ -63,11 +63,11 @@ auto Obsidian::flow() -> void
         auto& camera = scene.active_camera();
         const auto& extent = window.extent();
 
-        camera.set_aspect_ratio(static_cast<float>(extent.width), static_cast<float>(extent.height));
+        camera.set_aspect_ratio(static_cast<float>(extent.width), static_cast<float>(extent.height)); // TODO: Setting this separately is superfluous if the cam pos already contains it
 
         CameraData cam_data;
         cam_data.view_proj = camera.get_view_projection();
-        cam_data.pos = glm::vec4(camera.position(), 1.0f);
+        cam_data.pos = glm::vec4(camera.position(), static_cast<float>(extent.width) / static_cast<float>(extent.height));
 
         GPULightBlock light_data;
         light_data.ambient = scene.ambient_light();
@@ -123,9 +123,6 @@ auto Obsidian::command_list(Scene& scene, const std::vector<std::string>& shard_
             vk::Viewport viewport{ 0.0f, 0.0f, static_cast<float>(extent.width), static_cast<float>(extent.height), 0.0f, 1.0f };
             vk::Rect2D scissor({ 0, 0 }, extent);
 
-            command_buffer.handle().setViewport(0, 1, &viewport);
-            command_buffer.handle().setScissor(0, 1, &scissor);
-
             ImageBarrier::transition(command_buffer.handle(), swapchain_image)
                 .from(vk::ImageLayout::eUndefined)
                 .to(vk::ImageLayout::eColorAttachmentOptimal);
@@ -138,6 +135,26 @@ auto Obsidian::command_list(Scene& scene, const std::vector<std::string>& shard_
                 vk::RenderingAttachmentInfo depth_attachment;
                 bool has_depth = false;
 
+                if (shard_name == "postprocess")
+                {
+                    vk::ImageMemoryBarrier barrier;
+                    barrier.srcAccessMask = vk::AccessFlagBits::eColorAttachmentWrite;
+                    barrier.dstAccessMask = vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite;
+                    barrier.oldLayout = vk::ImageLayout::eColorAttachmentOptimal;
+                    barrier.newLayout = vk::ImageLayout::eColorAttachmentOptimal;
+                    barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+                    barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+                    barrier.image = swapchain_image;
+                    barrier.subresourceRange = { vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 };
+
+                    command_buffer.handle().pipelineBarrier(
+                        vk::PipelineStageFlagBits::eColorAttachmentOutput,
+                        vk::PipelineStageFlagBits::eColorAttachmentOutput,
+                        vk::DependencyFlags(),
+                        0, nullptr, 0, nullptr, 1, &barrier
+                    );
+                }
+
                 for (size_t i = 0; i < shard.attachments.size(); ++i)
                 {
                     const auto& attachment = shard.attachments[i];
@@ -146,8 +163,6 @@ auto Obsidian::command_list(Scene& scene, const std::vector<std::string>& shard_
                         continue;
                     }
 
-                    auto clear_color = (shard.is_swapchain_target && i == 0) ? window.ui.clear_color() : attachment.clear_color;
-
                     vk::RenderingAttachmentInfo info;
                     info.imageView = (shard.is_swapchain_target)
                         ? resources.swapchain_view(image_index)->handle()
@@ -155,7 +170,15 @@ auto Obsidian::command_list(Scene& scene, const std::vector<std::string>& shard_
                     info.imageLayout = attachment.layout.mLayout;
                     info.loadOp = Translator::to<vk::AttachmentLoadOp>(attachment.load_op.mLoadBehavior);
                     info.storeOp = Translator::to<vk::AttachmentStoreOp>(attachment.store_op.mStoreBehavior);
-                    info.clearValue = vk::ClearValue{ clear_color };
+
+                    if (info.loadOp == vk::AttachmentLoadOp::eClear)
+                    {
+                        auto clear_color = (shard.is_swapchain_target && i == 0)
+                            ? window.ui.clear_color()
+                            : attachment.clear_color;
+                        
+                        info.clearValue = vk::ClearValue{ clear_color };
+                    }
                     
                     color_attachments.push_back(info);
                 }
@@ -170,7 +193,11 @@ auto Obsidian::command_list(Scene& scene, const std::vector<std::string>& shard_
                     depth_attachment.imageLayout = d_att.layout.mLayout;
                     depth_attachment.loadOp = Translator::to<vk::AttachmentLoadOp>(d_att.load_op.mLoadBehavior);
                     depth_attachment.storeOp = Translator::to<vk::AttachmentStoreOp>(d_att.store_op.mStoreBehavior);
-                    depth_attachment.clearValue = vk::ClearValue{ { 0.0f, 0 } };
+                    
+                    if (depth_attachment.loadOp == vk::AttachmentLoadOp::eClear)
+                    {
+                        depth_attachment.clearValue = vk::ClearValue{ { 0.0f, 0 } };
+                    }
                 }
 
                 vk::RenderingInfo rendering_info;
@@ -188,23 +215,21 @@ auto Obsidian::command_list(Scene& scene, const std::vector<std::string>& shard_
 
                 for (const auto& pipeline_name : shard.pipelines)
                 {
-                    if (pipeline_name == "skybox")
+                    auto& pipeline = shaders.pipeline(pipeline_name, shard);
+                    pipeline.bind_into(command_buffer);
+
+                    command_buffer.handle().setViewport(0, 1, &viewport);
+                    command_buffer.handle().setScissor(0, 1, &scissor);
+                    command_buffer.handle().bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeline.layout_handle(), 0, 1, &global_set, 0, nullptr);
+
+                    if (pipeline_name == "skybox" || pipeline_name == "lensflare")
                     {
-                        auto& pipeline = shaders.pipeline(pipeline_name, shard);
-                        pipeline.bind_into(command_buffer);
-
-                        command_buffer.handle().bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeline.layout_handle(), 0, 1, &global_set, 0, nullptr);
                         command_buffer.handle().draw(3, 1, 0, 0);
-
                         continue;
                     }
 
-                    const auto& blueprint = shaders.blueprint(pipeline_name);
-                    auto& pipeline = shaders.pipeline(pipeline_name, shard);
-                    pipeline.bind_into(command_buffer);
-                    command_buffer.handle().bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeline.layout_handle(), 0, 1, &global_set, 0, nullptr);
-
                     // TODO: batch drawing calls!!!
+                    const auto& blueprint = shaders.blueprint(pipeline_name);
                     for (const auto& object : scene.objects())
                     {
                         if (std::find(object->pipelines().begin(), object->pipelines().end(), pipeline_name) == object->pipelines().end())
@@ -241,6 +266,7 @@ auto Obsidian::command_list(Scene& scene, const std::vector<std::string>& shard_
                 command_buffer.handle().endRendering();
             }
 
+            // Disabled until we actually have a window that serves a purpose
             window.ui.render(command_buffer.handle(), resources.swapchain_view(image_index)->handle());
 
             ImageBarrier::transition(command_buffer.handle(), swapchain_image)

@@ -94,13 +94,18 @@ struct PipelineOptions
 	avk::cfg::culling_mode cull_mode = avk::cfg::culling_mode::cull_back_faces;
 	avk::cfg::front_face front_face = avk::cfg::front_face::define_front_faces_to_be_counter_clockwise();
 	avk::cfg::compare_operation compare_operation = avk::cfg::compare_operation::greater_or_equal;
-
 	bool depth_test = true;
 	bool depth_write = true;
-
-	bool alpha_blending = false;
-
+	std::string blending = "none";
 	uint32_t max_recursion_depth = 1;
+	
+	enum class Type
+	{
+		Default,
+		Wireframe,
+		Transparent,
+		Additive
+	};
 
 	static auto create_default() -> PipelineOptions
 	{
@@ -115,11 +120,12 @@ struct PipelineOptions
 		return options;
 	}
 
-	static auto create_transparent() -> PipelineOptions
+	static auto create_transparent(std::string blending = "alpha") -> PipelineOptions
 	{
 		PipelineOptions options;
+		options.depth_test = false;
 		options.depth_write = false;
-		options.alpha_blending = true;
+		options.blending = blending;
 		return options;
 	}
 };
@@ -132,10 +138,11 @@ struct PipelineKey
 	std::string name;
 	std::vector<vk::Format> colors;
 	vk::Format depth;
+	PipelineOptions::Type type;
 
 	bool operator==(const PipelineKey& other) const
 	{
-		return name == other.name && colors == other.colors && depth == other.depth;
+		return name == other.name && colors == other.colors && depth == other.depth && type == other.type;
 	}
 };
 
@@ -146,6 +153,7 @@ struct PipelineKeyHash
 		std::size_t h = std::hash<std::string>{}(key.name);
 		for (auto f : key.colors) h ^= std::hash<int>{}(static_cast<int>(f));
 		h ^= std::hash<int>{}(static_cast<int>(key.depth));
+		h ^= std::hash<int>{}(static_cast<int>(key.type));
 		return h;
 	}
 };
@@ -250,8 +258,8 @@ public:
 	 * @param compile_path The path where the compiled SPIR-V binaries should be stored.
 	 */
 	auto load(const std::string& shader_path, const std::string& compile_path) -> void;
-	auto pipeline(const std::string& name, const Shard& shard, const PipelineOptions& options = PipelineOptions::create_default()) -> Pipeline&;
-	auto pipeline(const std::string& name, const std::vector<ShardMetadata>& color_attachments, const ShardMetadata& depth_attachment, const PipelineOptions& options) -> Pipeline&;
+	auto pipeline(const std::string& name, const Shard& shard) -> Pipeline&;
+	auto pipeline(const std::string& name, const std::vector<ShardMetadata>& color_attachments, const ShardMetadata& depth_attachment, const PipelineOptions::Type options_type = PipelineOptions::Type::Default) -> Pipeline&;
 	auto blueprint(const std::string& name) const -> const PipelineBlueprint&;
 
 private:

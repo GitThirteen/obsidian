@@ -20,6 +20,7 @@ struct Shard
 	std::vector<ShardMetadata> attachments;
 	ShardMetadata depth_attachment;
 	std::vector<std::string> pipelines;
+	std::string options;
 	bool is_swapchain_target = false;
 
 	std::vector<avk::image> internal_images;

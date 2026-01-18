@@ -14,6 +14,7 @@ struct ShardConfig
 
     std::string name;
     std::string target;
+    std::string options;
     std::array<float, 4u> clear_color = { 0.0f, 0.0f, 0.0f, 0.0f };
     std::vector<Attachment> attachments;
     std::vector<std::string> pipelines;
@@ -109,6 +110,7 @@ namespace c4
             if (n.has_child("attachments")) n["attachments"] >> v->attachments;
             if (n.has_child("pipelines")) n["pipelines"] >> v->pipelines;
             if (n.has_child("clear_color")) n["clear_color"] >> v->clear_color;
+            if (n.has_child("options")) n["options"] >> v->options;
 
             return true;
         }

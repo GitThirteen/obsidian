@@ -18,6 +18,7 @@ scenes:
 # Render shards are defined here. A shard has the following structure:
 # - name: Unique identifier for the shard
 # - target: The render target (e.g., screen, texture)
+# - options: The shard setting configuration (e.g., default, transparent, wireframe)  
 # - clear_color: The color used to clear the screen at the start of the pass
 # - attachments: List of attachments with their load/store operations and layouts
 # - layers: The layers to be rendered in this pass
@@ -26,6 +27,7 @@ scenes:
 shards:
   - name: "main"
     target: "screen"
+    options: "default"
     clear_color: [1.0, 1.0, 1.0, 1.0]
     attachments:
       - type: "color"
@@ -38,7 +40,19 @@ shards:
         layout: "depth"
     pipelines: ["base", "skybox"]
 
+  - name: "postprocess"
+    target: "screen"
+    options: "additive"
+    clear_color: [1.0, 1.0, 1.0, 1.0]
+    attachments:
+      - type: "color"
+        load: "load"
+        store: "store"
+        layout: "color"
+    pipelines: ["lensflare"]
+
 # Define the order in which shards are rendered.
 # If not specified, shards will be rendered in the order they are defined.
 order:
   - "main"
+  - "postprocess"

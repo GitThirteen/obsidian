@@ -126,9 +126,9 @@ lights:
     type: "directional"
     pipelines: ["base"]
     data:
-      color: [0.5, 0.6, 0.8]
-      intensity: 20
-      direction: [-0.5, -1.0, 0.3]
+      color: [0.9, 0.9, 1.0]
+      intensity: 30
+      direction: [-0.5, 1.0, 0.3]
 
 #  - name: "street_lamp"
 #    type: "point"
@@ -139,14 +139,14 @@ lights:
 #      position: [10.0, 5.0, -2.0]
 #      radius: 12.0
 
-  - name: "bulb"
-    type: "point"
-    pipelines: ["base"]
-    data:
-      color: [0.9, 0.9, 1.0]
-      intensity: 50.0
-      position: [0.0, 5.0, 0.0]
-      radius: 8.0
+#  - name: "bulb"
+#    type: "point"
+#    pipelines: ["base"]
+#    data:
+#      color: [0.9, 0.9, 1.0]
+#      intensity: 50.0
+#      position: [0.0, 5.0, 0.0]
+#      radius: 8.0
 
 #  - name: "flashlight"
 #    type: "spot"

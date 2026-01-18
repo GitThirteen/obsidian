@@ -1,6 +1,7 @@
 #pragma once
 
 #include <native/core/include.h>
+#include <native/graphics/shaders.obn.h>
 
 struct Translator
 {

@@ -1,5 +1,6 @@
 #include <native/graphics/resources.obn.h>
 #include <native/platform/window.obn.h>
+#include <native/graphics/shaders.obn.h>
 
 auto ResourceManager::initialize() -> void
 {
@@ -230,6 +231,7 @@ auto ResourceManager::create_shards() -> void
 		default_shard.attachments.push_back(ShardMetadata::default_color_attachment());
 		default_shard.depth_attachment = ShardMetadata::default_depth_attachment();
 		default_shard.pipelines.push_back("base");
+		default_shard.options = "default";
 		default_shard.is_swapchain_target = true;
 
 		m_shards.insert({ "default", default_shard });
@@ -243,6 +245,7 @@ auto ResourceManager::create_shards() -> void
 		Shard shard;
 		shard.pipelines = shard_config.pipelines;
 		shard.is_swapchain_target = (shard_config.target == "screen");
+		shard.options = shard_config.options;
 
 		// Parse metadata for each attachment
 		for (const auto& attachment_config : shard_config.attachments)

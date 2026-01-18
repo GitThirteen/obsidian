@@ -348,12 +348,17 @@ auto ShaderManager::load(const std::string& shader_path, const std::string& comp
 	}
 }
 
-auto ShaderManager::pipeline(const std::string& name, const Shard& shard, const PipelineOptions& options) -> Pipeline&
+auto ShaderManager::pipeline(const std::string& name, const Shard& shard) -> Pipeline&
 {
-	return pipeline(name, shard.attachments, shard.depth_attachment, options);
+	PipelineOptions::Type type = (shard.options == "transparent") ? PipelineOptions::Type::Transparent 
+							   : (shard.options == "wireframe")	  ?	PipelineOptions::Type::Wireframe 
+							   : (shard.options == "additive")    ?	PipelineOptions::Type::Additive
+							   : PipelineOptions::Type::Default;
+
+	return pipeline(name, shard.attachments, shard.depth_attachment, type);
 }
 
-auto ShaderManager::pipeline(const std::string& name, const std::vector<ShardMetadata>& color_attachments, const ShardMetadata& depth_attachment, const PipelineOptions& options) -> Pipeline&
+auto ShaderManager::pipeline(const std::string& name, const std::vector<ShardMetadata>& color_attachments, const ShardMetadata& depth_attachment, const PipelineOptions::Type options_type) -> Pipeline&
 {
 	// Generate pipeline key
 	std::vector<vk::Format>	color_formats;
@@ -371,7 +376,7 @@ auto ShaderManager::pipeline(const std::string& name, const std::vector<ShardMet
 		depth_format = depth_attachment.format;
 	}
 
-	const PipelineKey key{ name, color_formats, depth_format };
+	const PipelineKey key{ name, color_formats, depth_format, options_type };
 
 	// Return existing pipeline if found...
 	if (m_pipelines.contains(key))
@@ -391,6 +396,22 @@ auto ShaderManager::pipeline(const std::string& name, const std::vector<ShardMet
 
 	Pipeline pipeline;
 	pipeline.set_type(blueprint.type);
+
+	PipelineOptions options;
+	switch (options_type)
+	{
+	case PipelineOptions::Type::Transparent:
+		options = PipelineOptions::create_transparent();
+		break;
+	case PipelineOptions::Type::Additive:
+		options = PipelineOptions::create_transparent("additive");
+		break;
+	case PipelineOptions::Type::Wireframe:
+		options = PipelineOptions::create_wireframe();
+		break;
+	default:
+		options = PipelineOptions::create_default();
+	}
 
 	switch (pipeline.type())
 	{
@@ -455,15 +476,6 @@ void ShaderManager::build_graphics_pipeline(Pipeline& pipeline, const PipelineBl
 	config.mPolygonDrawingModeAndConfig = avk::cfg::polygon_drawing{ options.polygon_mode, 1.0f, false, 1.0f };
 	config.mCullingMode = options.cull_mode;
 	config.mFrontFaceWindingOrder =	options.front_face;
-	
-	for (uint32_t i = 0; i < color_formats.size(); ++i)
-	{
-		auto blending_config = options.alpha_blending
-			? avk::cfg::color_blending_config::enable_alpha_blending_for_attachment(i)
-			: avk::cfg::color_blending_config::disable_blending_for_attachment(i);
-
-		config.mColorBlendingPerAttachment.push_back(blending_config);
-	}
 
 	if (options.depth_test)
 	{
@@ -481,17 +493,23 @@ void ShaderManager::build_graphics_pipeline(Pipeline& pipeline, const PipelineBl
 	config.mViewportDepthConfig.push_back(avk::cfg::viewport_depth_scissors_config::dynamic(true, true));
 	config.mResourceBindings = blueprint.as_binding_data();
 
+	avk::cfg::color_blending_config blending_config = (options.blending == "alpha") ? avk::cfg::color_blending_config::enable_alpha_blending_for_all_attachments()
+		: (options.blending == "additive") ? avk::cfg::color_blending_config::enable_additive_for_all_attachments()
+		: avk::cfg::color_blending_config::disable();
+
 	std::vector<avk::attachment> dyn_attachments;
 	for (uint32_t i = 0; i < color_formats.size(); ++i)
 	{
 		dyn_attachments.push_back(
 			avk::attachment::declare(
 				color_formats[i],
-				avk::on_load::clear,
+				(options.blending == "additive" || options.blending == "alpha") ? avk::on_load::load : avk::on_load::clear, // TODO: Replace with translator call
 				avk::usage::color(i),
 				avk::on_store::store
 			)
 		);
+
+		config.mColorBlendingPerAttachment.push_back(blending_config);
 	}
 
 	if (depth_format != vk::Format::eUndefined)
@@ -499,7 +517,7 @@ void ShaderManager::build_graphics_pipeline(Pipeline& pipeline, const PipelineBl
 		dyn_attachments.push_back(
 			avk::attachment::declare(
 				depth_format,
-				avk::on_load::clear,
+				avk::on_load::load, // TODO: this will require more sophisticated handling...
 				avk::usage::depth_stencil,
 				avk::on_store::dont_care
 			)
