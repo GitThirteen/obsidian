@@ -25,6 +25,9 @@ layout(set = 0, binding = 1) uniform LightBlock {
 
 layout(set = 0, binding = 2) uniform sampler2D u_envMap;
 
+// Unused, but required by layout
+layout(set = 0, binding = 3) uniform sampler2D u_shadowMask;
+
 const vec2 invAtan = vec2(0.1591, 0.3183);
 
 vec2 SampleSphericalMap(vec3 v)

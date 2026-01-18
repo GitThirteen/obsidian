@@ -12,6 +12,7 @@ layout(set = 0, binding = 0) uniform CameraData {
 
 layout(set = 0, binding = 1) uniform LightData { vec4 _; } lights; 
 layout(set = 0, binding = 2) uniform sampler2D skybox;
+layout(set = 0, binding = 3) uniform sampler2D u_shadowMask;
 
 void main() {
     vec3 blue_white = vec3(0.8, 0.9, 1.0);

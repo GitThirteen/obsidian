@@ -12,6 +12,7 @@ auto Obsidian::flow() -> void
     m_camera_buffers.resize(frames);
     m_light_buffers.resize(frames);
     m_global_descriptor_sets.resize(frames);
+    m_rt_sets.resize(frames);
 
     // Initialize camera & light buffers per in-flight frame
     for (size_t i = 0; i < frames; ++i)
@@ -38,6 +39,18 @@ auto Obsidian::flow() -> void
     m_rain_draw_set = rain_draw_pipeline.make_descriptor_set(resources.descriptor_pool(), 1);
     ShaderDescriptor::write_storage_buffer(root.device(), m_rain_draw_set, 0, m_particle_buffer);
 
+    // Raytracing stuff
+    // TODO: This should be its own class
+    std::vector<TriangleMesh> triangle_data = scenes.active_scene().triangle_soup();
+    m_geometry_buffer = root.create_buffer(avk::memory_usage::device, vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst, avk::storage_buffer_meta::create_from_data(triangle_data));
+    m_geometry_buffer->fill(triangle_data.data(), 0);
+    
+    m_shadow_image = root.create_image(window.extent().width, window.extent().height, vk::Format::eR8Unorm, 1, avk::memory_usage::device, avk::image_usage::general_storage_image | avk::image_usage::sampled | avk::image_usage::transfer_source | avk::image_usage::transfer_destination);
+    auto shadow_mask = root.create_image_view(m_shadow_image);
+
+    struct RTCameraData { glm::mat4 inv_view_proj; glm::vec4 cam_pos; };
+    m_rt_camera_buffer = root.create_buffer(avk::memory_usage::host_visible, vk::BufferUsageFlagBits::eUniformBuffer, avk::generic_buffer_meta::create_from_data(RTCameraData{}));
+
     // Prewarming
     Pipeline* base_pipeline = nullptr;
 
@@ -56,12 +69,21 @@ auto Obsidian::flow() -> void
         }
     }
 
+    auto& rt_pipeline = shaders.pipeline("raytracing", {}, {}, PipelineOptions::Type::Default);
     for (size_t i = 0; i < frames; ++i)
     {
         m_global_descriptor_sets[i] = base_pipeline->make_descriptor_set(resources.descriptor_pool(), 0);
+        m_rt_sets[i] = rt_pipeline.make_descriptor_set(resources.descriptor_pool(), 0);
+        ShaderDescriptor::write_storage_buffer(root.device(), m_rt_sets[i], 0, m_geometry_buffer);
+        ShaderDescriptor::write_storage_image(root.device(), m_rt_sets[i], 4, shadow_mask);
+
+        auto& depth_view = resources.depth_view();
+        auto linear_sampler = root.create_sampler(avk::filter_mode::nearest_neighbor, avk::border_handling_mode::clamp_to_edge);
+        ShaderDescriptor::write_combined_image_sampler(root.device(), m_rt_sets[i], 3, depth_view, linear_sampler, vk::ImageLayout::eShaderReadOnlyOptimal);
 
         ShaderDescriptor::write_uniform_buffer(root.device(), m_global_descriptor_sets[i], 0, m_camera_buffers[i], 0, VK_WHOLE_SIZE);
         ShaderDescriptor::write_uniform_buffer(root.device(), m_global_descriptor_sets[i], 1, m_light_buffers[i], 0, VK_WHOLE_SIZE);
+        ShaderDescriptor::write_combined_image_sampler(root.device(), m_global_descriptor_sets[i], 3, shadow_mask, linear_sampler, vk::ImageLayout::eShaderReadOnlyOptimal);
     }
     
     while (!window.should_close())
@@ -134,6 +156,87 @@ auto Obsidian::command_list(Scene& scene, const std::vector<std::string>& shard_
 {
     return {
         avk::command::custom_commands([&](avk::command_buffer_t& command_buffer) {
+            auto& camera = scene.active_camera();
+
+            // Raytracing (Does not work currently!)
+            glm::mat4 inv_vp = glm::inverse(camera.get_view_projection());
+            struct RTCameraData { glm::mat4 inv_view_proj; glm::vec4 cam_pos; };
+            RTCameraData cam_data = { inv_vp, glm::vec4(camera.position(), 1.0f) };
+            m_rt_camera_buffer->fill(&cam_data, 0);
+
+            auto in_flight_index = frame.current_frame_index();
+            auto& current_rt_set = m_rt_sets[in_flight_index];
+
+            ShaderDescriptor::write_uniform_buffer(root.device(), current_rt_set, 1, m_rt_camera_buffer);
+            ShaderDescriptor::write_uniform_buffer(root.device(), current_rt_set, 2, m_light_buffers[in_flight_index]);
+
+            vk::ImageMemoryBarrier depth_to_read;
+            depth_to_read.oldLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
+            depth_to_read.newLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+            depth_to_read.srcAccessMask = vk::AccessFlagBits::eDepthStencilAttachmentWrite;
+            depth_to_read.dstAccessMask = vk::AccessFlagBits::eShaderRead;
+            depth_to_read.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            depth_to_read.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            depth_to_read.image = resources.depth_image()->handle();
+            depth_to_read.subresourceRange = { vk::ImageAspectFlagBits::eDepth, 0, 1, 0, 1 };
+
+            vk::ImageMemoryBarrier shadow_to_write;
+            shadow_to_write.oldLayout = vk::ImageLayout::eUndefined;
+            shadow_to_write.newLayout = vk::ImageLayout::eGeneral;
+            shadow_to_write.srcAccessMask = vk::AccessFlags();
+            shadow_to_write.dstAccessMask = vk::AccessFlagBits::eShaderWrite;
+            shadow_to_write.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            shadow_to_write.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            shadow_to_write.image = m_shadow_image->handle();
+            shadow_to_write.subresourceRange = { vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 };
+
+            vk::ImageMemoryBarrier pre_barriers[] = { depth_to_read, shadow_to_write };
+            command_buffer.handle().pipelineBarrier(
+                vk::PipelineStageFlagBits::eLateFragmentTests | vk::PipelineStageFlagBits::eTopOfPipe,
+                vk::PipelineStageFlagBits::eComputeShader,
+                vk::DependencyFlags(),
+                0, nullptr, 0, nullptr,
+                2, pre_barriers
+            );
+
+            auto& rt_pipeline = shaders.pipeline("raytracing", {}, {}, PipelineOptions::Type::Default);
+            rt_pipeline.bind_into(command_buffer);
+            command_buffer.handle().bindDescriptorSets(vk::PipelineBindPoint::eCompute, rt_pipeline.layout_handle(), 0, 1, &current_rt_set, 0, nullptr);
+
+            auto w = window.extent().width;
+            auto h = window.extent().height;
+            command_buffer.handle().dispatch((w + 15) / 16, (h + 15) / 16, 1);
+
+            vk::ImageMemoryBarrier shadow_to_read;
+            shadow_to_read.oldLayout = vk::ImageLayout::eGeneral;
+            shadow_to_read.newLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+            shadow_to_read.srcAccessMask = vk::AccessFlagBits::eShaderWrite;
+            shadow_to_read.dstAccessMask = vk::AccessFlagBits::eShaderRead;
+            shadow_to_read.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            shadow_to_read.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            shadow_to_read.image = m_shadow_image->handle();
+            shadow_to_read.subresourceRange = { vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 };
+
+            vk::ImageMemoryBarrier depth_to_attachment;
+            depth_to_attachment.oldLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+            depth_to_attachment.newLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
+            depth_to_attachment.srcAccessMask = vk::AccessFlagBits::eShaderRead;
+            depth_to_attachment.dstAccessMask = vk::AccessFlagBits::eDepthStencilAttachmentRead | vk::AccessFlagBits::eDepthStencilAttachmentWrite;
+            depth_to_attachment.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            depth_to_attachment.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            depth_to_attachment.image = resources.depth_image()->handle();
+            depth_to_attachment.subresourceRange = { vk::ImageAspectFlagBits::eDepth, 0, 1, 0, 1 };
+
+            vk::ImageMemoryBarrier post_barriers[] = { shadow_to_read, depth_to_attachment };
+
+            command_buffer.handle().pipelineBarrier(
+                vk::PipelineStageFlagBits::eComputeShader,
+                vk::PipelineStageFlagBits::eFragmentShader | vk::PipelineStageFlagBits::eEarlyFragmentTests,
+                vk::DependencyFlags(),
+                0, nullptr, 0, nullptr,
+                2, post_barriers
+            );
+            
             // Particle System
             auto& rain_sim_pipeline = shaders.pipeline("rain_sim", {}, {}, PipelineOptions::Type::Default);
             rain_sim_pipeline.bind_into(command_buffer);
@@ -142,7 +245,7 @@ auto Obsidian::command_list(Scene& scene, const std::vector<std::string>& shard_
             struct ParticlePC { float dt; PADDING(12); glm::vec4 min; glm::vec4 max; glm::vec4 wind; };
             ParticlePC ppc;
             ppc.dt = m_timer.dt();
-            glm::vec3 cam_pos = scene.active_camera().position();
+            glm::vec3 cam_pos = camera.position();
             float rain_bounds = 80.0f; // TODO: Only spawn rain in octree nodes that are visible
             ppc.min = glm::vec4(cam_pos.x - rain_bounds,           - 10.0f, cam_pos.z - rain_bounds, 1.0f);
             ppc.max = glm::vec4(cam_pos.x + rain_bounds, cam_pos.y + 30.0f, cam_pos.z + rain_bounds, 1.0f);
@@ -176,11 +279,6 @@ auto Obsidian::command_list(Scene& scene, const std::vector<std::string>& shard_
             ImageBarrier::transition(command_buffer.handle(), swapchain_image)
                 .from(vk::ImageLayout::eUndefined).as(vk::AccessFlagBits::eNone, vk::PipelineStageFlagBits::eTopOfPipe)
                 .to(vk::ImageLayout::eColorAttachmentOptimal).as(vk::AccessFlagBits::eColorAttachmentWrite, vk::PipelineStageFlagBits::eColorAttachmentOutput)
-                .commit();
-
-            ImageBarrier::transition(command_buffer.handle(), envmap.view->get_image().handle())
-                .from(vk::ImageLayout::eTransferDstOptimal).as(vk::AccessFlagBits::eTransferWrite, vk::PipelineStageFlagBits::eTransfer)
-                .to(vk::ImageLayout::eShaderReadOnlyOptimal).as(vk::AccessFlagBits::eShaderRead, vk::PipelineStageFlagBits::eFragmentShader)
                 .commit();
 
             auto extent = window.extent();
@@ -299,7 +397,7 @@ auto Obsidian::command_list(Scene& scene, const std::vector<std::string>& shard_
                         }
 
                         glm::mat4 inv_model = glm::inverse(object->model_matrix());
-                        glm::vec4 local_cam_pos = inv_model * glm::vec4(scene.active_camera().position(), 1.0f);
+                        glm::vec4 local_cam_pos = inv_model * glm::vec4(camera.position(), 1.0f);
                         local_cam_pos += 0.5f;
 
                         struct PushData { glm::mat4 model; glm::vec4 local_cam_pos; };

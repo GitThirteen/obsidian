@@ -17,7 +17,7 @@ auto ResourceManager::create_depth_buffer() -> void
 
 	m_depth_image = m_root.create_image(
 		m_extent.width, m_extent.height, m_depth_format, 1,
-		avk::memory_usage::device, avk::image_usage::depth_stencil_attachment
+		avk::memory_usage::device, avk::image_usage::depth_stencil_attachment | avk::image_usage::sampled
 	);
 
 	m_depth_view = m_root.create_image_view(m_depth_image);
@@ -212,7 +212,8 @@ auto ResourceManager::create_pools() -> void
 	std::vector<vk::DescriptorPoolSize> sizes = {
 		{ vk::DescriptorType::eStorageBuffer, 1024 },
 		{ vk::DescriptorType::eUniformBuffer, 1024 },
-		{ vk::DescriptorType::eCombinedImageSampler, 1024 }
+		{ vk::DescriptorType::eCombinedImageSampler, 1024 },
+		{ vk::DescriptorType::eStorageImage, 128 },
 	};
 
 	m_descriptor_pool = m_root.create_descriptor_pool(sizes, 1024);

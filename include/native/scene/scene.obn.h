@@ -44,6 +44,7 @@ public:
 	auto envmap() -> EnvironmentMap&;
 	auto lights() const -> const std::vector<SceneLight>&;
 	auto name() const -> const std::string&;
+	auto triangle_soup() const -> std::vector<TriangleMesh>;
 
 private:
 	std::string m_name = "";

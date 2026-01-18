@@ -59,6 +59,11 @@ private:
     vk::DescriptorSet m_rain_draw_set;
     const uint32_t OBSIDIAN_NUM_PARTICLES = 250000;
 
+    avk::image m_shadow_image;
+    avk::buffer m_rt_camera_buffer;
+    avk::buffer m_geometry_buffer;
+    std::vector<vk::DescriptorSet> m_rt_sets;
+
     avk::sampler m_envmap_sampler;
 
     auto command_list(Scene& scene, const std::vector<std::string>& shard_order, vk::DescriptorSet global_set) -> std::vector<avk::recorded_commands_t>;

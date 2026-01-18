@@ -41,6 +41,7 @@ auto AssetManager::add_mesh(const std::string& name, const std::string& filepath
 
     MeshAsset mesh;
 
+    mesh.data = data;
     mesh.vertex_buffer = m_root.create_buffer(
         avk::memory_usage::host_visible,
         vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst,
@@ -485,7 +486,7 @@ auto AssetManager::upload_image_data(avk::buffer& staging, avk::image& target) -
         pre_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
         pre_barrier.image = image_handle;
         pre_barrier.subresourceRange = full_range;
-        pre_barrier.srcAccessMask = vk::AccessFlags(); // nothing
+        pre_barrier.srcAccessMask = vk::AccessFlags();
         pre_barrier.dstAccessMask = vk::AccessFlagBits::eTransferWrite;
 
         cmd.pipelineBarrier(

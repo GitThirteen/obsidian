@@ -28,6 +28,8 @@ struct SceneObject
 	auto index_count() const -> const size_t { return m_mesh.get()->index_count; }
 	auto index_buffer() const -> const avk::buffer& { return m_mesh.get()->index_buffer; }
 	auto vertex_buffer() const -> const avk::buffer& { return m_mesh.get()->vertex_buffer; }
+	auto vertices_list() const -> const std::vector<Vertex>& { return m_mesh.get()->data.vertices; }
+	auto indices_list() const -> const std::vector<uint32_t>& { return m_mesh.get()->data.indices; }
 	auto has_descriptor_set() const -> bool { return m_descriptor_set != nullptr; }
 	auto descriptor_set() const -> const vk::DescriptorSet& { return m_descriptor_set; }
 	auto model_matrix() const -> const glm::mat4 { return m_model_matrix; }

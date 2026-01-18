@@ -1,0 +1,101 @@
+#version 460
+#extension GL_KHR_vulkan_glsl: enable
+layout(local_size_x = 16, local_size_y = 16) in;
+
+struct Triangle {
+    vec4 v0;
+    vec4 v1;
+    vec4 v2;
+};
+
+layout(std430, set = 0, binding = 0) readonly buffer GeometryBuffer {
+    Triangle triangles[];
+};
+
+layout(set = 0, binding = 1) uniform CameraData {
+    mat4 view_proj_inv;
+    vec4 cam_pos;
+} camera;
+
+struct SceneLight {
+    vec4 lighting;   // [r, g, b, intensity]
+    vec4 position;   // [x, y, z, is_spotlight]
+    vec4 direction;  // [x, y, z, radius]
+    vec4 data;       // [inner, outer, falloff, unused]
+};
+
+layout(set = 0, binding = 2) uniform LightBlock {
+    vec4 ambientLighting;
+    vec4 sunLighting;
+    vec4 sunDirection;
+    SceneLight sceneLights[16];
+} lights;
+
+layout(set = 0, binding = 3) uniform sampler2D depthMap;
+
+layout(set = 0, binding = 4, r8) uniform writeonly image2D shadowMask;
+
+const float EPSILON = 0.0001;
+
+bool intersect_triangle(vec3 ro, vec3 rd, Triangle tri, float max_dist) {
+    vec3 v0 = tri.v0.xyz;
+    vec3 v1 = tri.v1.xyz;
+    vec3 v2 = tri.v2.xyz;
+
+    vec3 edge1 = v1 - v0;
+    vec3 edge2 = v2 - v0;
+    vec3 h = cross(rd, edge2);
+    float a = dot(edge1, h);
+
+    if (a > -EPSILON && a < EPSILON) return false; // Parallel ray
+
+    float f = 1.0 / a;
+    vec3 s = ro - v0;
+    float u = f * dot(s, h);
+    if (u < 0.0 || u > 1.0) return false;
+
+    vec3 q = cross(s, edge1);
+    float v = f * dot(rd, q);
+    if (v < 0.0 || u + v > 1.0) return false;
+
+    float t = f * dot(edge2, q);
+    return (t > EPSILON && t < max_dist); // Hit is between start and light
+}
+
+void main() {
+    ivec2 coord = ivec2(gl_GlobalInvocationID.xy);
+    ivec2 size = imageSize(shadowMask);
+    if (coord.x >= size.x || coord.y >= size.y) return;
+
+    imageStore(shadowMask, coord, vec4(1.0)); // Need to disable the shader because no acceleration structure yet + shadow mask is written to but not read -> memory barrier issue?
+    return;
+
+    vec2 uv = (vec2(coord) + 0.5) / vec2(size);
+    float z = texture(depthMap, uv).r;
+
+    // Ignore skybox
+    if (!(z > EPSILON)) {
+        imageStore(shadowMask, coord, vec4(1.0));
+        return;
+    }
+
+    vec4 clip = vec4(uv * 2.0 - 1.0, z, 1.0);
+    vec4 world_w = camera.view_proj_inv * clip;
+    vec3 world_pos = world_w.xyz / world_w.w;
+
+    vec3 ray_dir = normalize(lights.sunDirection.xyz);
+    float max_dist = 10000.0;
+    vec3 ray_origin = world_pos + (ray_dir * EPSILON);
+
+    bool shadow = false;
+    uint count = triangles.length();
+
+    for (uint i = 0; i < count; ++i) {
+        if (intersect_triangle(ray_origin, ray_dir, triangles[i], max_dist)) {
+            shadow = true;
+            break; 
+        }
+    }
+
+    imageStore(shadowMask, coord, vec4(shadow ? 0.0 : 1.0));
+}

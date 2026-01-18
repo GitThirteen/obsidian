@@ -1799,7 +1799,6 @@
     <None Include="include\external\glm\gtx\wrap.inl">
       <Filter>Header Files</Filter>
     </None>
-    <None Include="resources\scenes\example.yaml" />
     <None Include="resources\shaders\active\base\base.frag" />
     <None Include="resources\shaders\active\base\base.vert" />
     <None Include="resources\shaders\active\skybox\skybox.frag" />
@@ -1809,6 +1808,8 @@
     <None Include="resources\shaders\active\rain_draw\rain.frag" />
     <None Include="resources\shaders\active\rain_draw\rain.vert" />
     <None Include="resources\shaders\active\rain_sim\rain.comp" />
+    <None Include="resources\shaders\active\raytracing\rt_shadows.comp" />
+    <None Include="resources\scenes\example.yaml" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="include\external\glfw\glfw3.lib" />

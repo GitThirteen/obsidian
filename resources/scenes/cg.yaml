@@ -17,8 +17,8 @@ envmap: "./resources/textures/overcast_soil_puresky_2k.hdr"
 materials:
   - name: "solid_red"
     base_color: [1.0, 0.0, 0.0, 1.0]
-    metallic: 0.2
-    roughness: 0.7
+    metallic: 0.3
+    roughness: 0.8
 
 # The general structure of a scene element is as follows:
 # - name: Unique identifier for the element
@@ -42,45 +42,20 @@ materials:
 #   - [OPTIONAL] scale: Scale of the element in the scene
   
 elements:
-  - name: "Ground"
-    type: "terrain" # right now, we do not differentiate between terrain and objects, but in the future, terrain may have different LOD or tesselation techniques
+  - name: "Street"
+    type: "terrain"
     pipelines: ["base"]
     data:
-      file: "OBSIDIAN_PLANE"
+      file: "./resources/meshes/street.obj"
       material: "solid_red"
       position: [0.0, -1.0, 0.0]
-      scale: [10.0, 1.0, 10.0]
-
-  - name: "Cube"
-    type: "object"
-    pipelines: ["base"]
-    data:
-      file: "OBSIDIAN_CUBE"
-      material: "solid_red"
-      position: [-1.5, 0.0, 0.0]
-
-  - name: "Sphere"
-    type: "object"
-    pipelines: ["base"]
-    data:
-      file: "OBSIDIAN_SPHERE"
-      material: "solid_red"
-      position: [1.5, 0.0, 0.0]
-
-  - name: "Teapot"
-    type: "object"
-    pipelines: ["base"]
-    data:
-      file: "./resources/meshes/teapot.obj"
-      material: "solid_red"
-      position: [0.0, 0.0, -2.0]
-      rotate: [0.0, 45.0, 0.0]
+      scale: [8.0, 8.0, 8.0]
 
   - name: "Camera1"
     type: "user_camera"
     pipelines: ["base"]
     data:
-      position: [0.0, 1.0, 5.0]
+      position: [0.0, -1.0, 0.0]
 
   - name: "Camera2"
     type: "static_camera"
@@ -122,7 +97,7 @@ lights:
       color: [0.02, 0.02, 0.05]
       intensity: 1.0
 
-  - name: "moonlight"
+  - name: "sun"
     type: "directional"
     pipelines: ["base"]
     data:

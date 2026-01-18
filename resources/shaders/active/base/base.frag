@@ -27,6 +27,7 @@ layout(set = 0, binding = 1) uniform LightBlock {
 } u_lights;
 
 layout(set = 0, binding = 2) uniform sampler2D u_envmap;
+layout(set = 0, binding = 3) uniform sampler2D u_shadowMask;
 
 layout(set = 1, binding = 0) uniform sampler2D texAlbedo;
 layout(set = 1, binding = 1) uniform sampler2D texRoughness;
@@ -170,7 +171,10 @@ void main() {
         vec3 L = normalize(u_lights.sunDirection.xyz);
         vec3 radiance = u_lights.sunLighting.rgb * u_lights.sunLighting.w;
 
-        Lo += Evaluate(V, L, N, radiance, albedo, roughness, metallic, F0);
+        vec2 screenUV = gl_FragCoord.xy / vec2(textureSize(u_shadowMask, 0));
+        float shadow = texture(u_shadowMask, screenUV).r;
+
+        Lo += Evaluate(V, L, N, radiance * shadow, albedo, roughness, metallic, F0);
     }
 
     // 2. SCENE LIGHTS (POINT & SPOT)

@@ -126,6 +126,31 @@ const std::string& Scene::name() const
 	return m_name;
 }
 
+auto Scene::triangle_soup() const -> std::vector<TriangleMesh>
+{
+	std::vector<TriangleMesh> result;
+
+	for (const auto& object : objects()) 
+	{
+		const auto& vertices = object->vertices_list();
+		const auto& indices = object->indices_list();
+		glm::mat4 model = object->model_matrix();
+
+		for (size_t i = 0; i < indices.size(); i += 3)
+		{
+			TriangleMesh t;
+
+			t.v0 = model * glm::vec4(vertices[indices[i + 0]].pos, 1.0f);
+			t.v1 = model * glm::vec4(vertices[indices[i + 1]].pos, 1.0f);
+			t.v2 = model * glm::vec4(vertices[indices[i + 2]].pos, 1.0f);
+
+			result.push_back(t);
+		}
+	}
+
+	return result;
+}
+
 void SceneManager::create_scene(const std::string& name, SceneInitCallback init, SceneUpdateCallback update)
 {
 	auto scene = std::make_shared<Scene>(name, init, update);

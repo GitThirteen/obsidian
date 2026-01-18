@@ -12,8 +12,7 @@ icon: "assets/icon.png" # doesn't do anything yet
 
 # List of scenes to be loaded at startup. The first scene will be the active scene.
 scenes:
-  - "example"
-#  - "volumetric"
+   - "cg"
 
 # Render shards are defined here. A shard has the following structure:
 # - name: Unique identifier for the shard

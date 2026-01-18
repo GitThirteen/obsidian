@@ -25,6 +25,7 @@ layout(set = 0, binding = 1) uniform LightBlock {
 
 // Unused, but required by layout
 layout(set = 0, binding = 2) uniform sampler2D u_envMap;
+layout(set = 0, binding = 3) uniform sampler2D u_shadowMask;
 
 float noise(vec2 t) {
     return fract(sin(dot(t, vec2(12.9898, 78.233))) * 43758.5453);

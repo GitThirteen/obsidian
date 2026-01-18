@@ -12,6 +12,13 @@ struct Vertex
     glm::vec2 uv;
 };
 
+struct TriangleMesh
+{
+    glm::vec4 v0;
+    glm::vec4 v1;
+    glm::vec4 v2;
+};
+
 struct GeometryData
 {
     std::vector<Vertex> vertices;
@@ -82,6 +89,7 @@ struct Primitives
 
 struct MeshAsset
 {
+    GeometryData data;
     avk::buffer vertex_buffer;
     avk::buffer index_buffer;
     uint32_t index_count = 0;
