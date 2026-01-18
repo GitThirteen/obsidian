@@ -124,8 +124,9 @@ auto Obsidian::command_list(Scene& scene, const std::vector<std::string>& shard_
             vk::Rect2D scissor({ 0, 0 }, extent);
 
             ImageBarrier::transition(command_buffer.handle(), swapchain_image)
-                .from(vk::ImageLayout::eUndefined)
-                .to(vk::ImageLayout::eColorAttachmentOptimal);
+                .from(vk::ImageLayout::eUndefined).as(vk::AccessFlagBits::eNone, vk::PipelineStageFlagBits::eTopOfPipe)
+                .to(vk::ImageLayout::eColorAttachmentOptimal).as(vk::AccessFlagBits::eColorAttachmentWrite, vk::PipelineStageFlagBits::eColorAttachmentOutput)
+                .commit();
 
             for (const auto& shard_name : shard_order)
             {
@@ -137,22 +138,10 @@ auto Obsidian::command_list(Scene& scene, const std::vector<std::string>& shard_
 
                 if (shard_name == "postprocess")
                 {
-                    vk::ImageMemoryBarrier barrier;
-                    barrier.srcAccessMask = vk::AccessFlagBits::eColorAttachmentWrite;
-                    barrier.dstAccessMask = vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite;
-                    barrier.oldLayout = vk::ImageLayout::eColorAttachmentOptimal;
-                    barrier.newLayout = vk::ImageLayout::eColorAttachmentOptimal;
-                    barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-                    barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-                    barrier.image = swapchain_image;
-                    barrier.subresourceRange = { vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 };
-
-                    command_buffer.handle().pipelineBarrier(
-                        vk::PipelineStageFlagBits::eColorAttachmentOutput,
-                        vk::PipelineStageFlagBits::eColorAttachmentOutput,
-                        vk::DependencyFlags(),
-                        0, nullptr, 0, nullptr, 1, &barrier
-                    );
+                    ImageBarrier::transition(command_buffer.handle(), swapchain_image)
+                        .from(vk::ImageLayout::eColorAttachmentOptimal).as(vk::AccessFlagBits::eColorAttachmentWrite, vk::PipelineStageFlagBits::eColorAttachmentOutput)
+                        .to(vk::ImageLayout::eColorAttachmentOptimal).as(vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite, vk::PipelineStageFlagBits::eColorAttachmentOutput)
+                        .commit();
                 }
 
                 for (size_t i = 0; i < shard.attachments.size(); ++i)
@@ -270,8 +259,9 @@ auto Obsidian::command_list(Scene& scene, const std::vector<std::string>& shard_
             window.ui.render(command_buffer.handle(), resources.swapchain_view(image_index)->handle());
 
             ImageBarrier::transition(command_buffer.handle(), swapchain_image)
-                .from(vk::ImageLayout::eColorAttachmentOptimal)
-                .to(vk::ImageLayout::ePresentSrcKHR);
+                .from(vk::ImageLayout::eColorAttachmentOptimal).as(vk::AccessFlagBits::eColorAttachmentWrite, vk::PipelineStageFlagBits::eColorAttachmentOutput)
+                .to(vk::ImageLayout::ePresentSrcKHR).as(vk::AccessFlagBits::eNone, vk::PipelineStageFlagBits::eBottomOfPipe)
+                .commit();
         })
     };
 }

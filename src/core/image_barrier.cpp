@@ -1,69 +1,65 @@
 #include <native/core/image_barrier.h>
 
-auto ImageBarrier::Builder::from(vk::ImageLayout from) -> Builder&
+ImageBarrier::Builder::Builder(vk::CommandBuffer cmd, vk::Image image, vk::ImageAspectFlags aspect_flags, uint32_t mip_levels, uint32_t layers)
+    : m_cmd(cmd), m_image(image)
 {
-    m_old_layout = from;
+    m_range.aspectMask = aspect_flags;
+    m_range.levelCount = mip_levels;
+    m_range.layerCount = layers;
+    m_range.baseMipLevel = 0;
+    m_range.baseArrayLayer = 0;
+}
+
+auto ImageBarrier::Builder::from(vk::ImageLayout layout) -> Builder&
+{
+    m_old_layout = layout;
     return *this;
 }
 
-auto ImageBarrier::Builder::to(vk::ImageLayout to) -> void
+auto ImageBarrier::Builder::to(vk::ImageLayout layout) -> Builder&
 {
-    vk::AccessFlags src_access;
-    vk::AccessFlags dst_access;
-    vk::PipelineStageFlags src_stage;
-    vk::PipelineStageFlags dst_stage;
+    m_new_layout = layout;
+    return *this;
+}
 
-    // Undefined -> Transfer Dst
-    if (m_old_layout == vk::ImageLayout::eUndefined && to == vk::ImageLayout::eTransferDstOptimal)
+auto ImageBarrier::Builder::as(vk::AccessFlags access, vk::PipelineStageFlags stage) -> Builder&
+{
+    // Idea: If 'to' hasn't been called yet, we are configuring the source side. Otherwise, we configure the destination side.
+    if (m_new_layout == vk::ImageLayout::eUndefined)
     {
-        src_access = vk::AccessFlagBits::eNone;
-        dst_access = vk::AccessFlagBits::eTransferWrite;
-        src_stage = vk::PipelineStageFlagBits::eTopOfPipe;
-        dst_stage = vk::PipelineStageFlagBits::eTransfer;
-    }
-    // Transfer Dst -> Shader Read
-    else if (m_old_layout == vk::ImageLayout::eTransferDstOptimal && to == vk::ImageLayout::eShaderReadOnlyOptimal)
-    {
-        src_access = vk::AccessFlagBits::eTransferWrite;
-        dst_access = vk::AccessFlagBits::eShaderRead;
-        src_stage = vk::PipelineStageFlagBits::eTransfer;
-        dst_stage = vk::PipelineStageFlagBits::eFragmentShader;
-    }
-    // Undefined -> Color Attachment
-    else if (m_old_layout == vk::ImageLayout::eUndefined && to == vk::ImageLayout::eColorAttachmentOptimal)
-    {
-        src_access = vk::AccessFlagBits::eNone;
-        dst_access = vk::AccessFlagBits::eColorAttachmentWrite;
-        src_stage = vk::PipelineStageFlagBits::eTopOfPipe;
-        dst_stage = vk::PipelineStageFlagBits::eColorAttachmentOutput;
-    }
-    // Color Attachment -> Present
-    else if (m_old_layout == vk::ImageLayout::eColorAttachmentOptimal && to == vk::ImageLayout::ePresentSrcKHR)
-    {
-        src_access = vk::AccessFlagBits::eColorAttachmentWrite;
-        dst_access = vk::AccessFlagBits::eNone;
-        src_stage = vk::PipelineStageFlagBits::eColorAttachmentOutput;
-        dst_stage = vk::PipelineStageFlagBits::eBottomOfPipe;
+        m_src_access = access;
+        m_src_stage = stage;
     }
     else
     {
-        throw std::invalid_argument("ImageBarrier: Unsupported layout transition combination!");
+        m_dst_access = access;
+        m_dst_stage = stage;
     }
 
+    return *this;
+}
+
+auto ImageBarrier::Builder::commit() -> void
+{
     vk::ImageMemoryBarrier barrier{};
     barrier.oldLayout = m_old_layout;
-    barrier.newLayout = to;
+    barrier.newLayout = m_new_layout;
+    barrier.srcAccessMask = m_src_access;
+    barrier.dstAccessMask = m_dst_access;
     barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
     barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
     barrier.image = m_image;
     barrier.subresourceRange = m_range;
-    barrier.srcAccessMask = src_access;
-    barrier.dstAccessMask = dst_access;
 
-    m_cmd.pipelineBarrier(src_stage, dst_stage, vk::DependencyFlags{}, 0, nullptr, 0, nullptr, 1, &barrier);
+    m_cmd.pipelineBarrier(
+        m_src_stage,
+        m_dst_stage,
+        vk::DependencyFlags{},
+        0, nullptr, 0, nullptr, 1, &barrier
+    );
 }
 
-auto ImageBarrier::transition(vk::CommandBuffer cmd, vk::Image image, vk::ImageAspectFlags aspect, uint32_t mip_levels, uint32_t layers) -> ImageBarrier::Builder
+auto ImageBarrier::transition(vk::CommandBuffer cmd, vk::Image image, vk::ImageAspectFlags aspect, uint32_t mips, uint32_t layers) -> ImageBarrier::Builder
 {
-    return Builder(cmd, image, aspect, mip_levels, layers);
+    return Builder(cmd, image, aspect, mips, layers);
 }
