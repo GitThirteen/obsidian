@@ -38,7 +38,7 @@ shards:
         load: "clear"
         store: "dont_care"
         layout: "depth"
-    pipelines: ["base", "skybox"]
+    pipelines: ["base", "skybox", "rain_draw"]
 
   - name: "postprocess"
     target: "screen"

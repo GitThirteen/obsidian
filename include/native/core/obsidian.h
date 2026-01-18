@@ -26,6 +26,7 @@ public:
     ShaderManager shaders;
     EventManager events;
     FrameManager<2> frame;
+    // TODO: ParticleManager
 
     Obsidian() : 
         window(root),
@@ -52,6 +53,11 @@ private:
     std::vector<avk::buffer> m_camera_buffers;
     std::vector<avk::buffer> m_light_buffers;
     std::vector<vk::DescriptorSet> m_global_descriptor_sets;
+
+    avk::buffer m_particle_buffer;
+    vk::DescriptorSet m_rain_sim_set;
+    vk::DescriptorSet m_rain_draw_set;
+    const uint32_t OBSIDIAN_NUM_PARTICLES = 250000;
 
     avk::sampler m_envmap_sampler;
 

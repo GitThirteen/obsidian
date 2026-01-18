@@ -1806,6 +1806,9 @@
     <None Include="resources\shaders\active\skybox\skybox.vert" />
     <None Include="resources\shaders\active\lensflare\lensflare.frag" />
     <None Include="resources\shaders\active\lensflare\lensflare.vert" />
+    <None Include="resources\shaders\active\rain_draw\rain.frag" />
+    <None Include="resources\shaders\active\rain_draw\rain.vert" />
+    <None Include="resources\shaders\active\rain_sim\rain.comp" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="include\external\glfw\glfw3.lib" />

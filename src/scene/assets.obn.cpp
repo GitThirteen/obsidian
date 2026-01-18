@@ -436,23 +436,18 @@ auto AssetManager::generic_texture(const std::array<uint8_t, 4>& rgba) -> Textur
 
 auto AssetManager::upload_image_data(avk::buffer& staging, avk::image& target) -> void
 {
-    // Local convenience
     vk::Device device = m_root.device();
     vk::Queue queue = m_root.queue().handle();
     uint32_t q_family_index = m_root.queue().family_index();
     vk::Image image_handle = target->handle();
 
-    // Query the target image create info (extent, type, layers, mip levels)
     auto img_info = target->create_info();
     vk::Extent3D extent = img_info.extent;
     vk::ImageType img_type = img_info.imageType;
     uint32_t mip_levels = img_info.mipLevels ? img_info.mipLevels : 1;
     uint32_t array_layers = img_info.arrayLayers ? img_info.arrayLayers : 1;
-
-    // For 3D images arrayLayers are not meaningful for buffer-copy; treat as single "layer"
     uint32_t copy_layer_count = (img_type == vk::ImageType::e3D) ? 1u : array_layers;
 
-    // Create a transient command pool for the short-lived upload
     vk::CommandPoolCreateInfo pool_info;
     pool_info.flags = vk::CommandPoolCreateFlagBits::eTransient;
     pool_info.queueFamilyIndex = q_family_index;
@@ -500,37 +495,20 @@ auto AssetManager::upload_image_data(avk::buffer& staging, avk::image& target) -
             0, nullptr, 0, nullptr, 1, &pre_barrier
         );
 
-        // Setup copy region. For 3D images extent.depth > 1 will be used.
         vk::BufferImageCopy region{};
         region.bufferOffset = 0;
-        region.bufferRowLength = 0;    // tightly packed
-        region.bufferImageHeight = 0;  // tightly packed
+        region.bufferRowLength = 0;
+        region.bufferImageHeight = 0;
         region.imageSubresource = { vk::ImageAspectFlagBits::eColor, 0, 0, copy_layer_count };
         region.imageOffset = vk::Offset3D{ 0, 0, 0 };
         region.imageExtent = extent;
 
-        // Execute the copy
-        cmd.copyBufferToImage(
-            staging->handle(),
-            image_handle,
-            vk::ImageLayout::eTransferDstOptimal,
-            1,
-            &region
-        );
+        cmd.copyBufferToImage(staging->handle(), image_handle, vk::ImageLayout::eTransferDstOptimal, 1, &region);
 
-        // Transition transfer dst -> shader read-only (for sampling)
-        vk::ImageMemoryBarrier post_barrier = pre_barrier;
-        post_barrier.oldLayout = vk::ImageLayout::eTransferDstOptimal;
-        post_barrier.newLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-        post_barrier.srcAccessMask = vk::AccessFlagBits::eTransferWrite;
-        post_barrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
-
-        cmd.pipelineBarrier(
-            vk::PipelineStageFlagBits::eTransfer,
-            vk::PipelineStageFlagBits::eFragmentShader,
-            vk::DependencyFlags(),
-            0, nullptr, 0, nullptr, 1, &post_barrier
-        );
+        ImageBarrier::transition(cmd, image_handle)
+            .from(vk::ImageLayout::eTransferDstOptimal).as(vk::AccessFlagBits::eTransferWrite, vk::PipelineStageFlagBits::eTransfer)
+            .to(vk::ImageLayout::eShaderReadOnlyOptimal).as(vk::AccessFlagBits::eShaderRead, vk::PipelineStageFlagBits::eFragmentShader)
+            .commit();
 
         cmd.end();
 

@@ -20,6 +20,24 @@ auto Obsidian::flow() -> void
         m_light_buffers[i] = root.create_buffer(avk::memory_usage::host_visible, vk::BufferUsageFlagBits::eUniformBuffer, avk::generic_buffer_meta::create_from_data(GPULightBlock{}));
     }
 
+    // Particle System stuff
+    // TODO: This should be its own class
+    struct GPUParticle { glm::vec4 pos; glm::vec4 vel; };
+    std::vector<GPUParticle> initial_particles(OBSIDIAN_NUM_PARTICLES);
+
+    m_particle_buffer = root.create_buffer(avk::memory_usage::device, vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferDst, avk::storage_buffer_meta::create_from_data(initial_particles));
+    m_particle_buffer->fill(initial_particles.data(), 0);
+
+    auto& main_shard = resources.shards().at("main");
+    auto& rain_draw_pipeline = shaders.pipeline("rain_draw", main_shard);
+    auto& rain_sim_pipeline = shaders.pipeline("rain_sim", {}, {}, PipelineOptions::Type::Default);
+
+    m_rain_sim_set = rain_sim_pipeline.make_descriptor_set(resources.descriptor_pool(), 1);
+    ShaderDescriptor::write_storage_buffer(root.device(), m_rain_sim_set, 0, m_particle_buffer);
+
+    m_rain_draw_set = rain_draw_pipeline.make_descriptor_set(resources.descriptor_pool(), 1);
+    ShaderDescriptor::write_storage_buffer(root.device(), m_rain_draw_set, 0, m_particle_buffer);
+
     // Prewarming
     Pipeline* base_pipeline = nullptr;
 
@@ -116,17 +134,58 @@ auto Obsidian::command_list(Scene& scene, const std::vector<std::string>& shard_
 {
     return {
         avk::command::custom_commands([&](avk::command_buffer_t& command_buffer) {
+            // Particle System
+            auto& rain_sim_pipeline = shaders.pipeline("rain_sim", {}, {}, PipelineOptions::Type::Default);
+            rain_sim_pipeline.bind_into(command_buffer);
+            command_buffer.handle().bindDescriptorSets(vk::PipelineBindPoint::eCompute, rain_sim_pipeline.layout_handle(), 1, 1, &m_rain_sim_set, 0, nullptr);
+
+            struct ParticlePC { float dt; PADDING(12); glm::vec4 min; glm::vec4 max; glm::vec4 wind; };
+            ParticlePC ppc;
+            ppc.dt = m_timer.dt();
+            glm::vec3 cam_pos = scene.active_camera().position();
+            float rain_bounds = 80.0f; // TODO: Only spawn rain in octree nodes that are visible
+            ppc.min = glm::vec4(cam_pos.x - rain_bounds,           - 10.0f, cam_pos.z - rain_bounds, 1.0f);
+            ppc.max = glm::vec4(cam_pos.x + rain_bounds, cam_pos.y + 30.0f, cam_pos.z + rain_bounds, 1.0f);
+            ppc.wind = glm::vec4(-2.0f, 0.0f, 0.0f, 0.0f);
+
+            const auto& sim_blueprint = shaders.blueprint("rain_sim");
+            command_buffer.handle().pushConstants(rain_sim_pipeline.layout_handle(), sim_blueprint.push_constant_stages, 0, sizeof(ppc), &ppc);
+            command_buffer.handle().dispatch((OBSIDIAN_NUM_PARTICLES + 255) / 256, 1, 1);
+
+            // TODO: Abstract Buffer memory barrier into barrier handler like image barrier
+            vk::BufferMemoryBarrier barrier;
+            barrier.srcAccessMask = vk::AccessFlagBits::eShaderWrite;
+            barrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
+            barrier.buffer = m_particle_buffer->handle();
+            barrier.offset = 0;
+            barrier.size = VK_WHOLE_SIZE;
+            barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+
+            command_buffer.handle().pipelineBarrier(
+                vk::PipelineStageFlagBits::eComputeShader,
+                vk::PipelineStageFlagBits::eVertexShader,
+                vk::DependencyFlags(), 0, nullptr, 1, &barrier, 0, nullptr
+            );
+
+            // Rest
             uint32_t image_index = frame.current_image_index();
             auto swapchain_image = resources.swapchain_image(image_index)->handle();
-
-            auto extent = window.extent();
-            vk::Viewport viewport{ 0.0f, 0.0f, static_cast<float>(extent.width), static_cast<float>(extent.height), 0.0f, 1.0f };
-            vk::Rect2D scissor({ 0, 0 }, extent);
+            auto& envmap = scene.envmap();
 
             ImageBarrier::transition(command_buffer.handle(), swapchain_image)
                 .from(vk::ImageLayout::eUndefined).as(vk::AccessFlagBits::eNone, vk::PipelineStageFlagBits::eTopOfPipe)
                 .to(vk::ImageLayout::eColorAttachmentOptimal).as(vk::AccessFlagBits::eColorAttachmentWrite, vk::PipelineStageFlagBits::eColorAttachmentOutput)
                 .commit();
+
+            ImageBarrier::transition(command_buffer.handle(), envmap.view->get_image().handle())
+                .from(vk::ImageLayout::eTransferDstOptimal).as(vk::AccessFlagBits::eTransferWrite, vk::PipelineStageFlagBits::eTransfer)
+                .to(vk::ImageLayout::eShaderReadOnlyOptimal).as(vk::AccessFlagBits::eShaderRead, vk::PipelineStageFlagBits::eFragmentShader)
+                .commit();
+
+            auto extent = window.extent();
+            vk::Viewport viewport{ 0.0f, 0.0f, static_cast<float>(extent.width), static_cast<float>(extent.height), 0.0f, 1.0f };
+            vk::Rect2D scissor({ 0, 0 }, extent);
 
             for (const auto& shard_name : shard_order)
             {
@@ -202,6 +261,7 @@ auto Obsidian::command_list(Scene& scene, const std::vector<std::string>& shard_
 
                 command_buffer.handle().beginRendering(rendering_info);
 
+                // TODO: Compute shaders don't live in shards currently -- add that (or find another solution) so this becomes less messy
                 for (const auto& pipeline_name : shard.pipelines)
                 {
                     auto& pipeline = shaders.pipeline(pipeline_name, shard);
@@ -214,6 +274,13 @@ auto Obsidian::command_list(Scene& scene, const std::vector<std::string>& shard_
                     if (pipeline_name == "skybox" || pipeline_name == "lensflare")
                     {
                         command_buffer.handle().draw(3, 1, 0, 0);
+                        continue;
+                    }
+
+                    if (pipeline_name == "rain_draw")
+                    {
+                        command_buffer.handle().bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeline.layout_handle(), 1, 1, &m_rain_draw_set, 0, nullptr);
+                        command_buffer.handle().draw(OBSIDIAN_NUM_PARTICLES * 6, 1, 0, 0);
                         continue;
                     }
 
@@ -255,7 +322,6 @@ auto Obsidian::command_list(Scene& scene, const std::vector<std::string>& shard_
                 command_buffer.handle().endRendering();
             }
 
-            // Disabled until we actually have a window that serves a purpose
             window.ui.render(command_buffer.handle(), resources.swapchain_view(image_index)->handle());
 
             ImageBarrier::transition(command_buffer.handle(), swapchain_image)

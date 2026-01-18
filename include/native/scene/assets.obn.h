@@ -2,6 +2,7 @@
 
 #include <native/core/include.h>
 #include <native/core/root.h>
+#include <native/core/image_barrier.h>
 #include <native/scene/light.h>
 
 struct Vertex
@@ -28,6 +29,11 @@ struct GPULightBlock
     AmbientLight ambient;
     DirectionalLight directional;
     SceneLight scene_lights[16];
+};
+
+struct GPUParticle {
+    glm::vec4 pos;
+    glm::vec4 vel;
 };
 
 enum class GeometricPrimitiveType

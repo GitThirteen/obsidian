@@ -1,0 +1,65 @@
+#version 460
+layout(local_size_x = 256) in;
+
+struct Particle {
+    vec4 pos;   // xyz = position, w = unused
+    vec4 vel;   // xyz = velocity, w = unused
+};
+
+layout(std430, set = 1, binding = 0) buffer ParticleBuffer {
+    Particle particles[];
+};
+
+layout(push_constant) uniform PushConsts {
+    vec4 dt;        // [dt, unused x3]
+    vec4 box_min;   // Rain start position (box)
+    vec4 box_max;   // Rain end position (box)
+    vec4 wind_dir;
+} pc;
+
+float noise(vec2 t) { // TODO: Move (initial) noise generation to the CPU?
+    return fract(sin(dot(t, vec2(12.9898, 78.233))) * 43758.5453);
+}
+
+void main() {
+    uint idx = gl_GlobalInvocationID.x;
+    if (idx >= particles.length()) return;
+
+    Particle p = particles[idx];
+
+    // Generate a random raindrop height so they don't drop all at the same time
+    if (p.pos.w == 0.0) {
+       float r_height = noise(vec2(idx, 99.0));
+        
+        // Distribute Y randomly between top and bottom
+        p.pos.y = mix(pc.box_min.y, pc.box_max.y, r_height);
+        
+        // Scatter X & Z
+        float r_x = noise(vec2(idx, 1.0));
+        float r_z = noise(vec2(idx, 42.0));
+        p.pos.x = mix(pc.box_min.x, pc.box_max.x, r_x);
+        p.pos.z = mix(pc.box_min.z, pc.box_max.z, r_z);
+
+        p.pos.w = 1.0; // Initialized!
+    }
+
+    float r_speed = noise(vec2(idx, p.pos.y));
+    float fall_speed = -8.0 - (r_speed * 4.0);
+    p.vel.xyz = vec3(0.0, fall_speed, 0.0) + pc.wind_dir.xyz;
+    p.pos.xyz += p.vel.xyz * pc.dt.x;
+
+    if (p.vel.y < -20.0) p.vel.y = -20.0;
+
+    if (p.pos.y < pc.box_min.y) {
+        float rx = noise(vec2(idx, p.pos.x));
+        float rz = noise(vec2(idx, p.pos.z + 42.0));
+
+        p.pos.x = mix(pc.box_min.x, pc.box_max.x, rx);
+        p.pos.y = pc.box_max.y;
+        p.pos.z = mix(pc.box_min.z, pc.box_max.z, rz);
+        
+        p.vel.xyz = vec3(0.0, -10.0, 0.0);
+    }
+
+    particles[idx] = p;
+}
