@@ -1,0 +1,7 @@
+export module Obsidian.Graphics;
+
+export import :Descriptors;
+export import :Shard;
+export import :FrameManager;
+export import :ResourceManager;
+export import :ShaderManager;
