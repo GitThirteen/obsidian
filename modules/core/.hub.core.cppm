@@ -26,6 +26,7 @@ module;
 
 export module Obsidian.Core;
 export import :Logger;
+export import :Manager;
 export import :Result;
 export import std;
 
