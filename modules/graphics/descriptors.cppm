@@ -3,7 +3,7 @@ module;
 export module Obsidian.Graphics:Descriptors;
 import std;
 
-export namespace obsidian::ShaderDescriptor 
+export namespace obsidian::descriptor 
 {
     auto generate_descriptor_set(vk::DescriptorType type, vk::DescriptorSet set, uint32_t binding) -> vk::WriteDescriptorSet 
     {
