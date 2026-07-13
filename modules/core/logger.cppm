@@ -1,8 +1,6 @@
 module;
 #include <cstdlib>
-
-#define EXPORT_OBSIDIAN_LOG export namespace obsidian::log {
-#define EXPORT_END }
+#include <native/macros.h>
 
 // =========================== //
 //    CORE - LOGGER MODULE     //
@@ -11,7 +9,7 @@ module;
 export module Obsidian.Core:Logger;
 import std;
 
-EXPORT_OBSIDIAN_LOG
+EXPORT(obsidian, log)
 
 enum class Level { Debug, Info, Warn, Error, Fatal };
 

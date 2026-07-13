@@ -9,7 +9,7 @@ export module Obsidian.Core:Result;
 import std;
 import :Logger;
 
-EXPORT_OBSIDIAN
+EXPORT(obsidian)
 
 template <typename T, typename E = std::string>
 struct Result 

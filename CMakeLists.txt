@@ -1,5 +1,14 @@
-cmake_minimum_required(VERSION 3.28)
+cmake_minimum_required(VERSION 3.30)
 
+# ---------------------------------------------------------------------------
+# Toolchain selection lives in CMakePresets.json, one preset per OS:
+#   windows -> MSVC (cl.exe)   + MSVC STL "std.ixx" modules
+#   linux   -> Clang + libc++  (via apt.llvm.org clang-20)
+#   macos   -> Clang + libc++  (via Homebrew LLVM)
+# ---------------------------------------------------------------------------
+
+# import std; is still experimental in CMake. The UUID gate must thus be set
+# before project(). Please refer to https://www.kitware.com/import-std-in-cmake-3-30/ for details.
 if(CMAKE_VERSION VERSION_GREATER_EQUAL "4.4.0")
     set(CMAKE_EXPERIMENTAL_CXX_IMPORT_STD "f35a9ac6-8463-4d38-8eec-5d6008153e7d")
 elseif(CMAKE_VERSION VERSION_GREATER_EQUAL "4.3.0")
@@ -12,6 +21,8 @@ elseif(CMAKE_VERSION VERSION_GREATER_EQUAL "3.31.8")
     set(CMAKE_EXPERIMENTAL_CXX_IMPORT_STD "d0edc3af-4c50-42ea-a356-e2862fe7a444")
 elseif(CMAKE_VERSION VERSION_GREATER_EQUAL "3.30.0")
     set(CMAKE_EXPERIMENTAL_CXX_IMPORT_STD "0e5b6991-d74f-4b3d-a41c-cf096e0b2508")
+else()
+    message(FATAL_ERROR "CMake ${CMAKE_VERSION} is too old for import std; support (>= 3.30 required). Please upgrade CMake.")
 endif()
 
 project(ObsidianRenderer CXX)
@@ -20,6 +31,15 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_MODULE_STD ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS "19.34")
+    message(FATAL_ERROR "MSVC ${CMAKE_CXX_COMPILER_VERSION} is too old for import std; (need toolset >= 14.34, i.e. VS 17.4+).")
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS "18.0")
+    message(FATAL_ERROR "Clang ${CMAKE_CXX_COMPILER_VERSION} is too old for import std; (need >= 18, with libc++).")
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS "15.0")
+    message(FATAL_ERROR "GCC ${CMAKE_CXX_COMPILER_VERSION} is too old for import std; (need >= 15).")
+endif()
 
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
@@ -45,6 +65,7 @@ endif()
 
 target_compile_options(Obsidian PRIVATE
     $<$<CXX_COMPILER_ID:Clang>:-Wall -Wextra -Wpedantic -Wno-unused-command-line-argument>
+    $<$<CXX_COMPILER_ID:GNU>:-Wall -Wextra -Wpedantic>
     $<$<CXX_COMPILER_ID:MSVC>:/W4 /WX->
 )
 
@@ -60,14 +81,6 @@ set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(glfw)
-
-# GLM
-FetchContent_Declare(
-    glm
-    GIT_REPOSITORY https://github.com/g-truc/glm.git
-    GIT_TAG        master
-)
-FetchContent_MakeAvailable(glm)
 
 # VulkanMemoryAllocator (VMA)
 FetchContent_Declare(
@@ -110,8 +123,8 @@ add_library(obn_imgui STATIC
     ${obn_imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp
     ${obn_imgui_SOURCE_DIR}/backends/imgui_impl_vulkan.cpp
 )
-target_include_directories(obn_imgui PUBLIC 
-    ${obn_imgui_SOURCE_DIR} 
+target_include_directories(obn_imgui PUBLIC
+    ${obn_imgui_SOURCE_DIR}
     ${obn_imgui_SOURCE_DIR}/backends
 )
 target_link_libraries(obn_imgui PRIVATE Vulkan::Vulkan glfw)
@@ -130,11 +143,10 @@ set_target_properties(Obsidian PROPERTIES CXX_SCAN_FOR_MODULES ON)
 
 target_include_directories(Obsidian PRIVATE include)
 
-target_link_libraries(Obsidian PRIVATE 
-    Vulkan::Vulkan 
-    glfw 
-    glm::glm 
-    VulkanMemoryAllocator 
-    slang 
+target_link_libraries(Obsidian PRIVATE
+    Vulkan::Vulkan
+    glfw
+    VulkanMemoryAllocator
+    slang
     obn_imgui
 )

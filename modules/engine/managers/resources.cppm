@@ -10,7 +10,7 @@ export module Obsidian.Engine:ResourceManager;
 import std;
 import Obsidian.Core;
 
-EXPORT_OBSIDIAN
+EXPORT(obsidian)
 
 class ResourceManager
 {

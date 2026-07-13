@@ -1,0 +1,74 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": { "major": 3, "minor": 30, "patch": 0 },
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    },
+    {
+      "name": "windows",
+      "inherits": "base",
+      "displayName": "Windows (MSVC + Ninja)",
+      "description": "Run from a 'Developer PowerShell for VS 2026', or just open the folder in Visual Studio 2026 / VS Code.",
+      "generator": "Ninja",
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "cl",
+        "CMAKE_C_COMPILER": "cl",
+        "CMAKE_BUILD_TYPE": "Release"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    },
+    {
+      "name": "linux",
+      "inherits": "base",
+      "displayName": "Linux (Clang 20 + libc++ + Ninja)",
+      "description": "Requires clang-20/libc++-20-dev from apt.llvm.org - distro Clang is usually too old.",
+      "generator": "Ninja",
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "clang++-20",
+        "CMAKE_C_COMPILER": "clang-20",
+        "CMAKE_CXX_FLAGS": "-stdlib=libc++",
+        "CMAKE_EXE_LINKER_FLAGS": "-stdlib=libc++",
+        "CMAKE_BUILD_TYPE": "Release"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
+      "name": "macos",
+      "inherits": "base",
+      "displayName": "macOS (Homebrew LLVM + libc++ + Ninja)",
+      "description": "Requires 'brew install llvm ninja'. Path below is for Apple Silicon; Intel Macs should change it to /usr/local/opt/llvm/bin/clang(++).",
+      "generator": "Ninja",
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "/opt/homebrew/opt/llvm/bin/clang++",
+        "CMAKE_C_COMPILER": "/opt/homebrew/opt/llvm/bin/clang",
+        "CMAKE_CXX_FLAGS": "-stdlib=libc++",
+        "CMAKE_EXE_LINKER_FLAGS": "-stdlib=libc++",
+        "CMAKE_BUILD_TYPE": "Release"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Darwin"
+      }
+    }
+  ],
+  "buildPresets": [
+    { "name": "windows", "configurePreset": "windows" },
+    { "name": "linux", "configurePreset": "linux" },
+    { "name": "macos", "configurePreset": "macos" }
+  ]
+}

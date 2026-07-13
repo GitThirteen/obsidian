@@ -2,17 +2,17 @@ module;
 #include <native/macros.h>
 
 // =========================== //
-//        ENGINE MODULE        //
+//   ENGINE - OBSIDIAN MODULE  //
 // =========================== //
 
-export module Obsidian.Engine;
+export module Obsidian.Engine:Obsidian;
 import Obsidian.Core;
 //import Obsidian.Window;
 import Obsidian.Graphics;
 
 import :ResourceManager;
 
-EXPORT_OBSIDIAN
+EXPORT(obsidian)
 
 struct Obsidian
 {

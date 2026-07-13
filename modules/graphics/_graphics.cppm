@@ -1,3 +1,7 @@
+// =============================== //
+//         GRAPHICS MODULE         //
+// =============================== //
+
 export module Obsidian.Graphics;
 
 export import :Descriptors;
