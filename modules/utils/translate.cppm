@@ -6,7 +6,8 @@ module;
 // UTILS - TRANSLATE MODULE //
 // ======================== //
 
-export module Obsidian.Utils:Translate;
+export module Obsidian.Utils.Translate;
+
 import std;
 
 NAMESPACE(obsidian, translator, detail)

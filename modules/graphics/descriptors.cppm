@@ -6,7 +6,8 @@ module;
 //  GRAPHICS - DESCRIPTORS MODULE  //
 // =============================== //
 
-export module Obsidian.Graphics:Descriptors;
+export module Obsidian.Graphics.Descriptors;
+
 import std;
 
 EXPORT(obsidian)

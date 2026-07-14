@@ -1,10 +1,10 @@
-export module Obsidian.Utils;
-
 // ==================== //
 //     UTILS MODULE     //
 // ==================== //
 
-export import :IO;
-export import :Timer;
-export import :Yaml;
-export import :Translate;
+export module Obsidian.Utils;
+
+export import Obsidian.Utils.IO;
+export import Obsidian.Utils.Timer;
+export import Obsidian.Utils.Yaml;
+export import Obsidian.Utils.Translate;

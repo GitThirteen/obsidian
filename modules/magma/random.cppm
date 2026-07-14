@@ -1,10 +1,11 @@
 module;
 #include <native/macros.h>
 
-export module Obsidian.Magma:Random;
+export module Obsidian.Magma.Random;
+
 import std;
-import :Vector;
-import :Definitions;
+import Obsidian.Magma.Vector;
+import Obsidian.Magma.Definitions;
 
 EXPORT(obsidian, magma, random)
 

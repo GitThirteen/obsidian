@@ -5,9 +5,10 @@ module;
 //   MAGMA - NOISE MODULE   //
 // ======================== //
 
-export module Obsidian.Magma:Noise;
+export module Obsidian.Magma.Noise;
+
 import std;
-import :Vector;
+import Obsidian.Magma.Vector;
 
 EXPORT(obsidian, noise)
 

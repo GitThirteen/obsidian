@@ -5,9 +5,10 @@ module;
 //     MAGMA - COLOR MODULE     //
 // ============================ //
 
-export module Obsidian.Magma:Color;
+export module Obsidian.Magma.Color;
+
 import std;
-import :Vector;
+import Obsidian.Magma.Vector;
 
 EXPORT(obsidian)
 
@@ -19,7 +20,9 @@ struct alignas(16) Color
     float a = 1.0f;
 
     constexpr Color() = default;
-    constexpr Color(float red, float green, float blue, float alpha = 1.0f) : r(red), g(green), b(blue), a(alpha) { }
+    constexpr Color(const float red, const float green, const float blue, const float alpha = 1.0f) : r(red), g(green), b(blue), a(alpha) { }
+    explicit constexpr Color(const Vector<float> rgb) : r(rgb.x()), g(rgb.y()), b(rgb.z()) { }
+    explicit constexpr Color(const Vector<float, 4> rgba) : r(rgba.x()), g(rgba.y()), b(rgba.z()), a(rgba.w()) { }
 
     static const Color White;
     static const Color Black;
@@ -35,6 +38,11 @@ struct alignas(16) Color
     {
         return 0.2126f * r + 0.7152f * g + 0.0722f * b;
     }
+
+    [[nodiscard]] constexpr auto max_coeff() const -> float
+    {
+        return std::max({ r, g, b });
+    }
 };
 
 inline constexpr Color Color::White       = { 1.0f, 1.0f, 1.0f, 1.0f };
@@ -49,11 +57,11 @@ inline constexpr Color Color::Transparent = { 0.0f, 0.0f, 0.0f, 0.0f };
 
 struct ToneMapper
 {
-    static auto reinhard(const Color& color, float white_point = -1.0f) -> Color
+    static auto reinhard(const Color& color, const float white_point = -1.0f) -> Color
     {
         if (white_point > 0.0f)
         {
-            float white_point2 = white_point * white_point;
+            const float white_point2 = white_point * white_point;
             return Color(
                 (color.r * (1.0f + color.r / white_point2)) / (1.0f + color.r),
                 (color.g * (1.0f + color.g / white_point2)) / (1.0f + color.g),
@@ -70,7 +78,7 @@ struct ToneMapper
         );
     }
 
-    static auto ACES(const Color& color) -> Color
+    static auto aces(const Color& color) -> Color
     {
         constexpr float a = 2.51f;
         constexpr float b = 0.03f;
@@ -78,7 +86,7 @@ struct ToneMapper
         constexpr float d = 0.59f;
         constexpr float e = 0.14f;
 
-        auto tone_map = [](float x) -> float
+        auto tone_map = [](const float x) -> float
         {
             return std::clamp((x * (a * x + b)) / (x * (c * x + d) + e), 0.0f, 1.0f);
         };
@@ -91,7 +99,7 @@ struct ToneMapper
         );
     }
 
-    static auto exposure(const Color& color, float exposure) -> Color
+    static auto exposure(const Color& color, const float exposure) -> Color
     {
         return Color(
             1.0f - std::exp(-color.r * exposure),
@@ -111,7 +119,7 @@ struct ToneMapper
         constexpr float F = 0.30f;
         constexpr float W = 11.2f;
 
-        auto tone_map = [](float x) -> float
+        auto tone_map = [](const float x) -> float
         {
             return ((x * (A * x + C * B) + D * E) / (x * (A * x + B) + D * F)) - (E / F);
         };
@@ -155,7 +163,7 @@ auto linear_to_rgb(const Color& color) -> Color
     );
 }
 
-auto hex_to_color(std::string_view hex) -> Color
+auto hex_to_color(const std::string_view& hex) -> Color
 {
     if (hex.size() != 7 && hex.size() != 9)
     {
@@ -177,28 +185,28 @@ auto hex_to_color(std::string_view hex) -> Color
 
 auto color_to_hex(const Color& color) -> std::string
 {
-    auto toHex = [](float value) -> std::string
+    auto to_hex = [](const float value) -> std::string
     {
-        int intValue = static_cast<int>(std::round(value * 255.0f));
+        const int channel_value = static_cast<int>(std::round(value * 255.0f));
         char buffer[3];
-        std::snprintf(buffer, sizeof(buffer), "%02X", intValue);
+        std::snprintf(buffer, sizeof(buffer), "%02X", channel_value);
         return std::string(buffer);
     };
 
-    return "#" + toHex(color.r) + toHex(color.g) + toHex(color.b) + toHex(color.a);
+    return "#" + to_hex(color.r) + to_hex(color.g) + to_hex(color.b) + to_hex(color.a);
 }
 
 auto hsv_to_rgb(Vector<float> hsv) -> Color
 {
-    float h = hsv.x();
-    float s = hsv.y();
-    float v = hsv.z();
+    const float h = hsv.x();
+    const float s = hsv.y();
+    const float v = hsv.z();
 
-    int i = static_cast<int>(h * 6.0f);
-    float f = h * 6.0f - i;
-    float p = v * (1.0f - s);
-    float q = v * (1.0f - f * s);
-    float t = v * (1.0f - (1.0f - f) * s);
+    const int i = static_cast<int>(h * 6.0f);
+    const float f = h * 6.0f - i;
+    const float p = v * (1.0f - s);
+    const float q = v * (1.0f - f * s);
+    const float t = v * (1.0f - (1.0f - f) * s);
 
     switch (i % 6)
     {
@@ -246,9 +254,9 @@ auto rgb_to_hsv(const Color& color) -> Vector<float>
     return Vector<float>(h / 360.0f, s, v);
 }
 
-auto kelvin_to_rgb(float kelvin) -> Color
+auto kelvin_to_rgb(const float kelvin) -> Color
 {
-    float temperature = kelvin / 100.0f;
+    const float temperature = kelvin / 100.0f;
     float r, g, b;
 
     if (temperature <= 66.0f)

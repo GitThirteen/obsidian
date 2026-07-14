@@ -1,28 +1,44 @@
 module;
+#include <vulkan/vulkan_raii.hpp>
 #include <native/macros.h>
 
 // =========================== //
 //   ENGINE - OBSIDIAN MODULE  //
 // =========================== //
 
-export module Obsidian.Engine:Obsidian;
-import Obsidian.Core;
+export module Obsidian.Engine.Obsidian;
+
 //import Obsidian.Window;
 import Obsidian.Graphics;
-
-import :ResourceManager;
+import Obsidian.Engine.ResourceManager;
 
 EXPORT(obsidian)
 
 struct Obsidian
 {
     //Window window;
+    FrameManager frames;
     ResourceManager resources;
-    //ShaderManager shaders;
-    
-    void run()
+    ShaderManager shaders;
+
+    Obsidian(const vk::raii::Device& device, const vk::raii::CommandPool& pool) :
+        frames(device, pool),
+        resources(device),
+        shaders()
+    { }
+
+    auto initialize() -> Result<void>
     {
-        // Main loop logic goes here
+		frames.initialize().expect("Successfully initialized frame handler.");
+        resources.initialize().expect("Successfully initialized Vulkan resources.");
+        shaders.initialize().expect("Successfully initialized shader handler.");
+
+        return { };
+    }
+    
+    void flow()
+    {
+        
     }
 };
 

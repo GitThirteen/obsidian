@@ -6,7 +6,7 @@ module;
 //    CORE - LOGGER MODULE     //
 // =========================== //
 
-export module Obsidian.Core:Logger;
+export module Obsidian.Core.Logger;
 import std;
 
 EXPORT(obsidian, log)

@@ -5,9 +5,10 @@ module;
 //    MAGMA - VECTOR MODULE    //
 // =========================== //
 
-export module Obsidian.Magma:Vector;
+export module Obsidian.Magma.Vector;
+
 import std;
-import Obsidian.Core;
+import Obsidian.Core.Concepts;
 
 EXPORT(obsidian)
 

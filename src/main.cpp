@@ -8,12 +8,11 @@ using namespace obsidian;
 
 auto main(int argc, char* argv[]) -> int
 {
-    log::info("Launching Obsidian Engine...");
+    log::info("Preparing Obsidian Engine...");
 
     Obsidian engine;
-    
-    log::info("Starting render loop.");
-    engine.run();
+    engine.initialize().expect("Finished building engine components.");
+    engine.flow();
 
     auto sampler = magma::sampler::Independent();
     auto sample = sampler.next_1d();

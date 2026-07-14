@@ -6,7 +6,8 @@ module;
 //     GRAPHICS - SHARD MODULE     //
 // =============================== //
 
-export module Obsidian.Graphics:Shard;
+export module Obsidian.Graphics.Shard;
+
 import std;
 import Obsidian.Core;
 

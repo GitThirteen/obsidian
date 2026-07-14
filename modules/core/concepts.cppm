@@ -5,7 +5,7 @@ module;
 //   CORE - CONCEPTS MODULE   //
 // ========================== //
 
-export module Obsidian.Core:Concepts;
+export module Obsidian.Core.Concepts;
 import std;
 
 EXPORT(obsidian)

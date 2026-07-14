@@ -8,11 +8,15 @@ module;
 // GRAPHICS - SHADER MANAGER MODULE //
 // ================================ //
 
-export module Obsidian.Graphics:ShaderManager;
+export module Obsidian.Graphics.ShaderManager;
+
 import std;
-import Obsidian.Core;
-import :Pipeline;
-import :Shard;
+//import Obsidian.Core;
+import Obsidian.Core.Manager;
+import Obsidian.Core.Logger;
+import Obsidian.Core.Result;
+import Obsidian.Graphics.Pipeline;
+import Obsidian.Graphics.Shard;
 
 EXPORT(obsidian)
 
@@ -21,7 +25,7 @@ class ShaderManager : public Manager
 public:
     ShaderManager() = default;
 
-    auto initialize() -> Result<void> 
+    auto initialize() -> Result<void> override
     {
         log::info("Initializing Slang compiler session...");
         

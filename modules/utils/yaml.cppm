@@ -5,9 +5,10 @@ module;
 //  UTILS - YAML MODULE  //
 // ===================== //
 
-export module Obsidian.Utils:Yaml;
+export module Obsidian.Utils.Yaml;
+
 import std;
-import Obsidian.Core;
+import Obsidian.Core.Result;
 
 EXPORT(obsidian, yaml)
 

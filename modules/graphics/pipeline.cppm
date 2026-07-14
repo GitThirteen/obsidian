@@ -6,7 +6,8 @@ module;
 //    GRAPHICS - PIPELINE MODULE   //
 // =============================== //
 
-export module Obsidian.Graphics:Pipeline;
+export module Obsidian.Graphics.Pipeline;
+
 import std;
 import Obsidian.Core;
 
@@ -38,7 +39,7 @@ struct PipelineOptions
         return options;
     }
 
-    static auto create_transparent(std::string blend = "alpha") -> PipelineOptions
+    static auto create_transparent(const std::string& blend = "alpha") -> PipelineOptions
     {
         PipelineOptions options;
         options.depth_test = false;
@@ -95,7 +96,7 @@ public:
         return *m_layout;
     }
 
-    auto make_descriptor_set(const vk::raii::Device& device, const vk::raii::DescriptorPool& pool, uint32_t set_index = 0) const -> Result<vk::raii::DescriptorSet>
+    auto make_descriptor_set(const vk::raii::Device& device, const vk::raii::DescriptorPool& pool, const uint32_t set_index = 0) const -> Result<vk::raii::DescriptorSet>
     {
         try
         {

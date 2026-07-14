@@ -6,7 +6,8 @@ module;
 // GRAPHICS - IMAGE BARRIER MODULE //
 // =============================== //
 
-export module Obsidian.Graphics:ImageBarrier;
+export module Obsidian.Graphics.ImageBarrier;
+
 import std;
 
 NAMESPACE(obsidian)

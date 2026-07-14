@@ -24,8 +24,8 @@ module;
 
 export module Obsidian.Core;
 
-export import :Concepts;
-export import :Logger;
-export import :Manager;
-export import :Result;
-export import :Types;
+export import Obsidian.Core.Concepts;
+export import Obsidian.Core.Logger;
+export import Obsidian.Core.Manager;
+export import Obsidian.Core.Result;
+export import Obsidian.Core.Types;

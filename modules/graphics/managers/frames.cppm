@@ -6,36 +6,43 @@ module;
 // GRAPHICS - FRAME MANAGER MODULE //
 // =============================== //
 
-export module Obsidian.Graphics:FrameManager;
+export module Obsidian.Graphics.FrameManager;
+
 import std;
-import Obsidian.Core;
-import :Pipeline;
-import :Shard;
+import Obsidian.Core.Manager;
+import Obsidian.Core.Result;
+import Obsidian.Core.Types;
+import Obsidian.Graphics.Pipeline;
+import Obsidian.Graphics.Shard;
 
 EXPORT(obsidian)
 
-class FrameManager 
+class FrameManager : public Manager
 {
 public:
-    FrameManager() = default;
+    FrameManager(const vk::raii::Device& device, const vk::raii::CommandPool& pool) : m_device(&device), m_pool(&pool) { }
 
-    auto initialize(const vk::raii::Device& device, const vk::raii::CommandPool& pool, uint32_t max_frames_in_flight) -> Result<void> 
+    auto initialize() -> Result<void> override
     {
-        m_max_frames = max_frames_in_flight;
+        if (!m_device || !m_pool)
+        {
+			return std::unexpected<std::string>("FrameManager requires a valid device and command pool.");
+        }
+
         try
         {
             vk::CommandBufferAllocateInfo alloc_info;
-            alloc_info.setCommandPool(*pool);
+			alloc_info.setCommandPool(**m_pool);
             alloc_info.setLevel(vk::CommandBufferLevel::ePrimary);
-            alloc_info.setCommandBufferCount(m_max_frames);
+            alloc_info.setCommandBufferCount(FRAMES_IN_FLIGHT);
 
-            m_frames = vk::raii::CommandBuffers(device, alloc_info);
+            m_frames = vk::raii::CommandBuffers(*m_device, alloc_info);
             return {};
-        } 
-        catch (const std::exception& e)
-        {
-            return std::unexpected(std::format("Failed to allocate frame command buffers: {}", e.what()));
         }
+        catch (const std::exception& e)
+		{
+            return std::unexpected(std::format("Failed to allocate frame command buffers: {}", e.what()));
+		}
     }
 
     auto current_command_buffer() -> const vk::raii::CommandBuffer& { return m_frames[m_curr_frame_index]; }
@@ -44,19 +51,21 @@ public:
 
     auto advance_frame() -> void
     {
-        m_curr_frame_index = (m_curr_frame_index + 1) % m_max_frames;
+        m_curr_frame_index = (m_curr_frame_index + 1) % FRAMES_IN_FLIGHT;
     }
     
-    auto set_active_image(uint32_t index) -> void
+    auto set_active_image(const uint32_t index) -> void
     {
         m_curr_image_index = index;
     }
 
 private:
+    const vk::raii::Device* m_device = nullptr;
+    const vk::raii::CommandPool* m_pool = nullptr;
+
     std::vector<vk::raii::CommandBuffer> m_frames;
     uint32_t m_curr_frame_index = 0;
     uint32_t m_curr_image_index = 0;
-    uint32_t m_max_frames = 2;
 };
 
 EXPORT_END

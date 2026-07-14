@@ -2,12 +2,12 @@ module;
 #include <native/macros.h>
 
 // =========================== //
-//    CORE - LOGGER MODULE     //
+//    CORE - MANAGER MODULE    //
 // =========================== //
 
-export module Obsidian.Core:Manager;
+export module Obsidian.Core.Manager;
 import std;
-import :Result;
+import Obsidian.Core.Result;
 
 EXPORT(obsidian)
 

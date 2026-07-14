@@ -5,9 +5,10 @@ module;
 //     UTILS MODULE     //
 // ==================== //
 
-export module Obsidian.Utils:IO;
+export module Obsidian.Utils.IO;
+
 import std;
-import Obsidian.Core;
+import Obsidian.Core.Result;
 
 EXPORT(obsidian, io)
 

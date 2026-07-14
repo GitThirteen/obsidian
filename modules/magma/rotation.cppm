@@ -5,11 +5,12 @@ module;
 //    MAGMA - ROTATION MODULE    //
 // ============================= //
 
-export module Obsidian.Magma:Rotation;
+export module Obsidian.Magma.Rotation;
+
 import std;
-import :Vector;
-import :Matrix;
-import :Definitions;
+import Obsidian.Magma.Vector;
+import Obsidian.Magma.Matrix;
+import Obsidian.Magma.Definitions;
 
 EXPORT(obsidian)
 

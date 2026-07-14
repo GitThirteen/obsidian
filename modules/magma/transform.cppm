@@ -5,11 +5,12 @@ module;
 //   MAGMA - TRANSFORM MODULE   //
 // ============================ //
 
-export module Obsidian.Magma:Transform;
+export module Obsidian.Magma.Transform;
+
 import std;
-import :Vector;
-import :Matrix;
-import :Rotation;
+import Obsidian.Magma.Vector;
+import Obsidian.Magma.Matrix;
+import Obsidian.Magma.Rotation;
 
 EXPORT(obsidian, magma)
 

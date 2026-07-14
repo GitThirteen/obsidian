@@ -5,11 +5,12 @@ module;
 //   MAGMA - GEOMETRY MODULE   //
 // =========================== //
 
-export module Obsidian.Magma:Geometry;
+export module Obsidian.Magma.Geometry;
+
 import std;
-import :Vector;
-import :Matrix;
-import :Definitions;
+import Obsidian.Magma.Vector;
+import Obsidian.Magma.Matrix;
+import Obsidian.Magma.Definitions;
 
 EXPORT(obsidian)
 

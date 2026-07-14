@@ -5,9 +5,9 @@ module;
 //    CORE - RESULT MODULE     //
 // =========================== //
 
-export module Obsidian.Core:Result;
+export module Obsidian.Core.Result;
 import std;
-import :Logger;
+import Obsidian.Core.Logger;
 
 EXPORT(obsidian)
 

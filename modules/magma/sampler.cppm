@@ -5,10 +5,11 @@ module;
 //   MAGMA - SAMPLING MODULE   //
 // =========================== //
 
-export module Obsidian.Magma:Sampler;
+export module Obsidian.Magma.Sampler;
+
 import std;
-import :Vector;
-import :Random;
+import Obsidian.Magma.Vector;
+import Obsidian.Magma.Random;
 
 EXPORT(obsidian, magma, sampler)
 

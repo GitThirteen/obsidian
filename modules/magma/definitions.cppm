@@ -5,7 +5,8 @@ module;
 //  MAGMA - DEFINITIONS MODULE  //
 // ============================ //
 
-export module Obsidian.Magma:Definitions;
+export module Obsidian.Magma.Definitions;
+
 import std;
 
 EXPORT(obsidian)

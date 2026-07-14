@@ -5,7 +5,8 @@ module;
 //   MAGMA - VARIADIC MODULE   //
 // =========================== //
 
-export module Obsidian.Magma:Variadic;
+export module Obsidian.Magma.Variadic;
+
 import std;
 
 EXPORT(obsidian)

@@ -5,7 +5,8 @@ module;
 // UTILS - TIMER MODULE //
 // ==================== //
 
-export module Obsidian.Utils:Timer;
+export module Obsidian.Utils.Timer;
+
 import std;
 
 EXPORT(obsidian)

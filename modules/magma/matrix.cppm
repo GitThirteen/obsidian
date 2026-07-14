@@ -5,9 +5,10 @@ module;
 //     MAGMA - MATRIX MODULE     //
 // ============================= //
 
-export module Obsidian.Magma:Matrix;
+export module Obsidian.Magma.Matrix;
+
 import std;
-import :Vector;
+import Obsidian.Magma.Vector;
 
 EXPORT(obsidian)
 

@@ -5,11 +5,12 @@ module;
 //      MAGMA - WARP MODULE      //
 // ============================= //
 
-export module Obsidian.Magma:Warp;
+export module Obsidian.Magma.Warp;
+
 import std;
-import :Vector;
-import :Definitions;
-import :Random;
+import Obsidian.Magma.Vector;
+import Obsidian.Magma.Definitions;
+import Obsidian.Magma.Random;
 
 EXPORT(obsidian, magma, warp)
 
@@ -134,7 +135,7 @@ constexpr auto concentric_disk(const Vector<float, 2>& p) -> float
     return 0.0f;
 }
 
-constexpr auto uniform_sphere(const Vector<float, 3>& v) -> float
+constexpr auto uniform_sphere() -> float
 {
     return 0.25f * INVPI;
 }
