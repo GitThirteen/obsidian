@@ -25,6 +25,7 @@ module;
 export module Obsidian.Core;
 
 export import Obsidian.Core.Concepts;
+export import Obsidian.Core.Config;
 export import Obsidian.Core.Logger;
 export import Obsidian.Core.Manager;
 export import Obsidian.Core.Result;

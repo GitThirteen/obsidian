@@ -52,21 +52,21 @@ struct Result
     template <typename SuccessFn, typename ErrorFn>
     auto resolve(SuccessFn&& on_success, ErrorFn&& on_error) -> decltype(auto)
     {
-        if (inner.has_value())
+        if (!inner.has_value())
         {
-            if constexpr (std::is_void_v<T>)
-                return std::invoke(std::forward<SuccessFn>(on_success));
-            else
-                return std::invoke(std::forward<SuccessFn>(on_success), inner.value());
+            return std::invoke(std::forward<ErrorFn>(on_error), inner.error());
         }
-        
-        return std::invoke(std::forward<ErrorFn>(on_error), inner.error());
+
+        if constexpr (std::is_void_v<T>)
+            return std::invoke(std::forward<SuccessFn>(on_success));
+        else
+            return std::invoke(std::forward<SuccessFn>(on_success), inner.value());
     }
 
     template <typename U = T> requires (!std::is_void_v<U>)
-    auto unwrap_or(U fallback) const -> U
+    auto unwrap_or(U fallback) const -> T
     {
-        return inner.value_or(std::move(fallback));
+        return inner.value_or(std::forward<U>(fallback));
     }
 
     template <typename Fn>

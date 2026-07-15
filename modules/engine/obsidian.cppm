@@ -8,22 +8,24 @@ module;
 
 export module Obsidian.Engine.Obsidian;
 
-//import Obsidian.Window;
+import Obsidian.Platform.Window;
 import Obsidian.Graphics;
 import Obsidian.Engine.ResourceManager;
+import Obsidian.Graphics.Mantle;
 
 EXPORT(obsidian)
 
 struct Obsidian
 {
-    //Window window;
     FrameManager frames;
     ResourceManager resources;
+    WindowManager window;
     ShaderManager shaders;
 
-    Obsidian(const vk::raii::Device& device, const vk::raii::CommandPool& pool) :
-        frames(device, pool),
-        resources(device),
+    explicit Obsidian(const Mantle& mantle) :
+        frames(*mantle.device, *mantle.command_pool),
+        resources(*mantle.device),
+		window(*mantle.instance),
         shaders()
     { }
 
@@ -31,7 +33,8 @@ struct Obsidian
     {
 		frames.initialize().expect("Successfully initialized frame handler.");
         resources.initialize().expect("Successfully initialized Vulkan resources.");
-        shaders.initialize().expect("Successfully initialized shader handler.");
+        window.initialize().expect("Successfully initialized window.");
+        shaders.initialize().expect("Successfully initialized shader handle.");
 
         return { };
     }
